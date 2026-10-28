@@ -1,3 +1,4 @@
+import { headers } from 'next/headers';
 import type { ReactNode } from 'react';
 import { ThemeRegistry } from '@/ui/theme-registry';
 
@@ -10,14 +11,15 @@ export const metadata = {
 /**
  * Kerangka dasar semua halaman PMCP (bahasa antarmuka Indonesia) dengan tema MUI.
  * Masukan: isi halaman. Keluaran: elemen html dan body.
- * Efek samping: tidak ada. Menu per peran ada pada layout grup `(app)`.
+ * Efek samping: membaca nonce CSP dari header permintaan (membuat semua halaman dinamis). Menu per peran ada pada layout grup `(app)`.
  * Rujukan: CL-010, Screen [025], handoff UX/UI §4.
  */
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const nonce = (await headers()).get('x-nonce') ?? undefined;
   return (
     <html lang="id" suppressHydrationWarning>
       <body>
-        <ThemeRegistry>{children}</ThemeRegistry>
+        <ThemeRegistry nonce={nonce}>{children}</ThemeRegistry>
       </body>
     </html>
   );

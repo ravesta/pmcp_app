@@ -5,7 +5,7 @@ import { MESSAGES, throttledMessage } from '@/platform/messages';
 import { formatClockTime, minutesUntil } from '@/shared/format';
 import { fail, ok, type Result } from '@/shared/result';
 import { normalizeUsername } from '../domain/username';
-import { afterFailure, lockedUntil, THROTTLE_RULES } from '../domain/throttle';
+import { lockedUntil, THROTTLE_RULES } from '../domain/throttle';
 import type { AuthDeps } from './ports';
 
 /** Masukan login dari formulir; `sourceAddress` diisi server dari header proxy tepercaya. */
@@ -83,9 +83,9 @@ export async function login(deps: AuthDeps, input: LoginInput): Promise<Result<L
 
   if (!valid || !user) {
     await Promise.all([
-      repo.saveThrottle('USER', userKey, afterFailure(userState, now, THROTTLE_RULES.userMaxFailures, THROTTLE_RULES.lockMinutes)),
+      repo.recordFailure('USER', userKey, { now, maxFailures: THROTTLE_RULES.userMaxFailures, lockMinutes: THROTTLE_RULES.lockMinutes }),
       trackIp
-        ? repo.saveThrottle('IP', ipKey, afterFailure(ipState, now, THROTTLE_RULES.ipMaxFailures, THROTTLE_RULES.lockMinutes, THROTTLE_RULES.ipWindowMinutes))
+        ? repo.recordFailure('IP', ipKey, { now, maxFailures: THROTTLE_RULES.ipMaxFailures, lockMinutes: THROTTLE_RULES.lockMinutes, windowMinutes: THROTTLE_RULES.ipWindowMinutes })
         : Promise.resolve(),
     ]);
     await deps.writeAudit(null, {

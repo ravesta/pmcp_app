@@ -32,6 +32,15 @@ export interface SessionRecord extends SessionTimes {
 export type ThrottleScope = 'USER' | 'IP';
 
 /** Akses data auth. Semua metode yang menulis menerima `tx` opsional (null = transaksi kecil sendiri). */
+/** Aturan pencatatan satu kegagalan login (lihat `THROTTLE_RULES`). */
+export interface FailureRule {
+  readonly now: Date;
+  readonly maxFailures: number;
+  readonly lockMinutes: number;
+  /** Kegagalan lebih tua dari jendela ini tidak dihitung; kosong = tanpa jendela. */
+  readonly windowMinutes?: number;
+}
+
 export interface AuthRepository {
   findUserByUsername(username: string): Promise<UserRecord | null>;
   findUserById(userId: number): Promise<UserRecord | null>;
@@ -42,7 +51,11 @@ export interface AuthRepository {
   /** Mencabut semua sesi pengguna, kecuali satu sesi bila `exceptTokenHash` diberikan. */
   revokeUserSessions(tx: TxContext | null, userId: number, now: Date, exceptTokenHash?: Uint8Array): Promise<void>;
   getThrottle(scope: ThrottleScope, key: string): Promise<ThrottleState | null>;
-  saveThrottle(scope: ThrottleScope, key: string, state: ThrottleState): Promise<void>;
+  /**
+   * Mencatat satu kegagalan secara atomik (satu pernyataan SQL, tanpa baca-lalu-tulis) sehingga percobaan paralel
+   * tidak melewati batas. Aturannya sama dengan `afterFailure` di domain. Mengembalikan keadaan sesudahnya.
+   */
+  recordFailure(scope: ThrottleScope, key: string, rule: FailureRule): Promise<ThrottleState>;
   clearThrottle(tx: TxContext | null, scope: ThrottleScope, key: string): Promise<void>;
   updatePassword(tx: TxContext | null, userId: number, passwordHash: string, mustChange: boolean, now: Date): Promise<void>;
 }

@@ -11,13 +11,13 @@ const theme = createAppTheme();
 
 /**
  * Menyediakan tema MUI dan cache gaya sisi server untuk seluruh aplikasi.
- * Masukan: isi halaman. Keluaran: pembungkus tema.
+ * Masukan: isi halaman dan nonce CSP permintaan (agar tag gaya Emotion diizinkan). Keluaran: pembungkus tema.
  * Efek samping: tidak ada (hanya menyediakan konteks tema dan menyuntikkan gaya bawaan).
  * Rujukan: handoff UX/UI §4, Technical Design TDR-05 (integrasi App Router resmi MUI).
  */
-export function ThemeRegistry({ children }: { children: ReactNode }) {
+export function ThemeRegistry({ children, nonce }: { children: ReactNode; nonce?: string }) {
   return (
-    <AppRouterCacheProvider>
+    <AppRouterCacheProvider options={{ nonce }}>
       <ThemeProvider theme={theme} defaultMode="system">
         <CssBaseline />
         <ThemeTokens />

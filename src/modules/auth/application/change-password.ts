@@ -6,7 +6,7 @@ import { formatClockTime, minutesUntil } from '@/shared/format';
 import { fail, ok, type Result } from '@/shared/result';
 import { can } from '../domain/actor';
 import { validatePassword } from '../domain/password-policy';
-import { afterFailure, lockedUntil, THROTTLE_RULES } from '../domain/throttle';
+import { lockedUntil, THROTTLE_RULES } from '../domain/throttle';
 import { normalizeUsername } from '../domain/username';
 import type { AuthDeps } from './ports';
 import type { AuthenticatedSession } from './session-use-cases';
@@ -53,7 +53,7 @@ export async function changeOwnPassword(
 
   const currentOk = await deps.hasher.verify(user.passwordHash, input.current);
   if (!currentOk) {
-    await deps.repository.saveThrottle('USER', user.username, afterFailure(throttle, now, THROTTLE_RULES.userMaxFailures, THROTTLE_RULES.lockMinutes));
+    await deps.repository.recordFailure('USER', user.username, { now, maxFailures: THROTTLE_RULES.userMaxFailures, lockMinutes: THROTTLE_RULES.lockMinutes });
     await deps.writeAudit(null, {
       actorUserId: user.id,
       actorLabel: user.displayName,

@@ -156,6 +156,22 @@ describe('login dan throttle (FR-01-01)', () => {
     expect(await container.auth.repository.getThrottle('USER', 'throttle.uji')).toBeNull();
   });
 
+  it.skipIf(!isPg)('percobaan gagal paralel tercatat atomik: tidak ada yang hilang dan batas tetap berlaku', async () => {
+    const rule = { now: new Date('2026-10-28T05:00:00Z'), maxFailures: 5, lockMinutes: 15 };
+    const states = await Promise.all(Array.from({ length: 12 }, () => container.auth.repository.recordFailure('USER', 'paralel.uji', rule)));
+    expect(Math.max(...states.map((state) => state.failures))).toBe(12);
+    const final = await container.auth.repository.getThrottle('USER', 'paralel.uji');
+    expect(final?.failures).toBe(12);
+    expect(final?.lockedUntil).not.toBeNull();
+  });
+
+  it.skipIf(!isPg)('alamat tidak diketahui hanya dibatasi per username (tidak mengunci semua pengguna)', async () => {
+    for (let i = 0; i < 25; i += 1) await login(container.auth, { username: `tamu.${i}`, password: 'sembarang-password', sourceAddress: 'tidak-diketahui' });
+    expect(await container.auth.repository.getThrottle('IP', 'tidak-diketahui')).toBeNull();
+    const ok = await login(container.auth, { username: 'manager', password: 'kopi-hitam-tanpa-gula', sourceAddress: 'tidak-diketahui' });
+    expect(ok.ok || (!ok.ok && ok.error.code !== 'THROTTLED')).toBe(true);
+  });
+
   it.skipIf(!isPg)('username tidak dikenal juga ditunda dengan pesan yang sama bentuknya (anti enumerasi)', async () => {
     for (let i = 0; i < 5; i += 1) await login(container.auth, { username: 'hantu.siapa', password: 'sembarang-password', sourceAddress: '10.2.2.2' });
     const locked = await login(container.auth, { username: 'hantu.siapa', password: 'sembarang-password', sourceAddress: '10.2.2.3' });

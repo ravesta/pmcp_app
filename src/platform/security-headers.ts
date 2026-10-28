@@ -12,26 +12,26 @@ export interface HeaderEntry {
 
 /** Pilihan penyusunan header. */
 export interface SecurityHeaderOptions {
-  /** True pada pengembangan: Next.js dev memerlukan `eval` untuk hot reload. */
-  readonly development: boolean;
   /** True hanya bila diterapkan di belakang HTTPS (staging dan produksi): mengaktifkan HSTS. */
   readonly secureTransport: boolean;
 }
 
 /**
- * Menyusun Content-Security-Policy.
- * Masukan: apakah mode pengembangan. Keluaran: nilai header CSP satu baris.
- * Aturan: semua sumber hanya dari asal sendiri; skrip dan gaya inline diizinkan karena Next.js dan MUI (Emotion)
- * menyisipkannya; tidak boleh di-frame, tidak ada `object`, form hanya ke asal sendiri.
+ * Menyusun Content-Security-Policy bernonce. Skrip hanya boleh yang bernonce (`strict-dynamic` meneruskan kepercayaan ke
+ * skrip yang dimuatnya); `<style>` hanya yang bernonce (cache gaya Emotion/MUI diberi nonce yang sama); atribut `style`
+ * pada elemen diizinkan terpisah karena nonce tidak berlaku untuk atribut. Tidak boleh di-frame, tidak ada `object`, dan
+ * form hanya ke asal sendiri.
+ * Masukan: nonce permintaan dan penanda pengembangan (Next dev memerlukan `eval` dan gaya inline). Keluaran: nilai CSP.
  * Efek samping: tidak ada (fungsi murni).
- * Rujukan: Security Design §8 (CSP; versi bernonce dicatat sebagai pekerjaan lanjutan di implementation-log).
+ * Rujukan: Security Design §8 (CSP ketat dengan nonce untuk skrip).
  */
-export function buildContentSecurityPolicy(development: boolean): string {
-  const scriptSources = development ? "'self' 'unsafe-inline' 'unsafe-eval'" : "'self' 'unsafe-inline'";
+export function buildContentSecurityPolicy(nonce: string, development: boolean): string {
   return [
     "default-src 'self'",
-    `script-src ${scriptSources}`,
-    "style-src 'self' 'unsafe-inline'",
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${development ? " 'unsafe-eval'" : ''}`,
+    // di pengembangan Next.js menyisipkan gaya tanpa nonce; 'unsafe-inline' diabaikan browser bila nonce ada
+    development ? "style-src 'self' 'unsafe-inline'" : `style-src 'self' 'nonce-${nonce}'`,
+    "style-src-attr 'unsafe-inline'",
     "img-src 'self' data:",
     "font-src 'self' data:",
     "connect-src 'self'",
@@ -43,14 +43,24 @@ export function buildContentSecurityPolicy(development: boolean): string {
 }
 
 /**
- * Menyusun seluruh header keamanan untuk halaman dan respons ber-sesi.
+ * Membuat nonce acak untuk satu permintaan (16 byte, base64).
+ * Masukan: tidak ada. Keluaran: teks nonce.
+ * Efek samping: membaca sumber acak kriptografis (Web Crypto, tersedia di runtime proxy).
+ * Rujukan: Security Design §8.
+ */
+export function createNonce(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  return btoa(String.fromCharCode(...bytes));
+}
+
+/**
+ * Menyusun header keamanan statis untuk halaman dan respons ber-sesi (CSP dipasang per permintaan oleh `proxy.ts`).
  * Masukan: `SecurityHeaderOptions`. Keluaran: daftar header; HSTS hanya bila `secureTransport`.
  * Efek samping: tidak ada (fungsi murni).
  * Rujukan: Security Design §8, Technology Baseline TR-07.
  */
 export function buildSecurityHeaders(options: SecurityHeaderOptions): HeaderEntry[] {
   const headers: HeaderEntry[] = [
-    { key: 'Content-Security-Policy', value: buildContentSecurityPolicy(options.development) },
     { key: 'X-Content-Type-Options', value: 'nosniff' },
     { key: 'Referrer-Policy', value: 'same-origin' },
     { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=()' },

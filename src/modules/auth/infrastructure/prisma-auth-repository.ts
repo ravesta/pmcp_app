@@ -126,10 +126,30 @@ export function createPrismaAuthRepository(prisma: PrismaClient): AuthRepository
       return row ? { failures: row.failures, lockedUntil: row.locked_until, updatedAt: row.updated_at } : null;
     },
 
-    /** Menyimpan (upsert) penghitung throttle. Efek samping: UPSERT `login_throttle`. Rujukan: FR-01-01 butir 3. */
-    async saveThrottle(scope, key, state) {
-      const data = { failures: state.failures, locked_until: state.lockedUntil, updated_at: state.updatedAt };
-      await prisma.login_throttle.upsert({ where: { scope_key: { scope, key } }, create: { scope, key, ...data }, update: data });
+    /**
+     * Mencatat satu kegagalan dengan satu pernyataan UPSERT atomik: siklus baru dimulai dari 1 bila penundaan sudah lewat
+     * atau jendela habis, selain itu bertambah satu; penundaan dipasang saat ambang tercapai. Efek samping: UPSERT
+     * `login_throttle`. Rujukan: FR-01-01 butir 3, aturan sama dengan `afterFailure`.
+     */
+    async recordFailure(scope, key, rule) {
+      const reset = 'CASE WHEN (t.locked_until IS NOT NULL AND t.locked_until <= $3::timestamptz) OR ($6::int IS NOT NULL AND $3::timestamptz - t.updated_at > make_interval(mins => $6::int)) THEN 1 ELSE t.failures + 1 END';
+      const rows = await prisma.$queryRawUnsafe<Array<{ failures: number; locked_until: Date | null; updated_at: Date }>>(
+        `INSERT INTO login_throttle AS t (scope, key, failures, locked_until, updated_at)
+         VALUES ($1, $2, 1, CASE WHEN 1 >= $4::int THEN $3::timestamptz + make_interval(mins => $5::int) END, $3::timestamptz)
+         ON CONFLICT (scope, key) DO UPDATE SET
+           failures = ${reset},
+           locked_until = CASE WHEN ${reset} >= $4::int THEN $3::timestamptz + make_interval(mins => $5::int) ELSE NULL END,
+           updated_at = $3::timestamptz
+         RETURNING failures, locked_until, updated_at`,
+        scope,
+        key,
+        rule.now,
+        rule.maxFailures,
+        rule.lockMinutes,
+        rule.windowMinutes ?? null,
+      );
+      const row = rows[0] as { failures: number; locked_until: Date | null; updated_at: Date };
+      return { failures: row.failures, lockedUntil: row.locked_until, updatedAt: row.updated_at };
     },
 
     /** Menghapus penghitung throttle. Efek samping: DELETE `login_throttle`. Rujukan: FR-01-01 butir 3, FR-01-05 butir 4. */

@@ -1,9 +1,6 @@
 import type { NextConfig } from 'next';
 import { buildSecurityHeaders } from './src/platform/security-headers';
 
-/** Lingkungan penerapan: `APP_ENV` bila ada, selain itu `NODE_ENV` (sama dengan `platform/config`). */
-const appEnv = process.env.APP_ENV ?? process.env.NODE_ENV ?? 'development';
-
 /** Asal aplikasi di belakang proxy; dipakai Server Action untuk memeriksa `Origin` (CSRF, Security Design §8). */
 const appHost = process.env.APP_ORIGIN ? new URL(process.env.APP_ORIGIN).host : undefined;
 
@@ -20,10 +17,8 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   experimental: appHost ? { serverActions: { allowedOrigins: [appHost] } } : undefined,
   async headers() {
-    const securityHeaders = buildSecurityHeaders({
-      development: appEnv === 'development' || appEnv === 'test',
-      secureTransport: appEnv === 'production' || appEnv === 'staging',
-    });
+    // HSTS dipasang oleh proxy.ts saat berjalan karena APP_ENV tidak tentu saat build
+    const securityHeaders = buildSecurityHeaders({ secureTransport: false });
     // Aset statis bernama hash boleh di-cache; semua yang lain tidak (respons ber-sesi).
     return [{ source: '/((?!_next/static|_next/image).*)', headers: securityHeaders.map((h) => ({ ...h })) }];
   },
