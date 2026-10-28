@@ -15,9 +15,9 @@ import { StagePlanFields } from './stage-plan-fields';
 
 /** Tahapan yang ditampilkan pada formulir, berurutan (BL-02). */
 const STAGES = [
-  { kind: 'BA', title: 'Tahapan BA' },
-  { kind: 'DEV', title: 'Tahapan Development' },
-  { kind: 'QA', title: 'Tahapan QA' },
+  { kind: 'BA', title: 'Business Analyst' },
+  { kind: 'DEV', title: 'Development' },
+  { kind: 'QA', title: 'Quality Assurance' },
 ] as const;
 
 /** Status yang ditawarkan saat membuat project; Selesai tidak ditawarkan (BL-21). */
@@ -39,15 +39,16 @@ export function CreateProjectForm({ options }: { readonly options: ProjectFormOp
         <span aria-hidden> / </span>
         <span>Project baru</span>
       </div>
-      <CardHeader level={1} title="Buat project" subtitle="Isi informasi project dan, bila sudah ada, PIC serta estimasi tiap tahapan." />
+      <CardHeader level={1} title="Project baru" subtitle={<>Isi informasi project, lalu tentukan PIC dan estimasi tanggal tiap tahapan; keduanya boleh dikosongkan dan dilengkapi nanti. <span style={{ color: 'var(--late)' }}>*</span> wajib diisi</>} />
       <ActionForm
         key={resetKey}
         action={createProjectAction}
         submitLabel="Simpan project"
+        submitFirst
         secondary={
           <>
+            <Button variant="outlined" onClick={() => setResetKey((key) => key + 1)}>Kosongkan</Button>
             <LinkButton href="/project?v=daftar">Batal</LinkButton>
-            <Button onClick={() => setResetKey((key) => key + 1)}>Kosongkan</Button>
           </>
         }
       >
@@ -60,10 +61,9 @@ export function CreateProjectForm({ options }: { readonly options: ProjectFormOp
                 fieldErrors={fieldErrors}
               />
             </Section>
-            <Section title="Perencanaan tahapan">
+            <Section title="Tahapan, PIC, dan estimasi tanggal (opsional, dapat dilengkapi nanti)">
               <p className={styles.hint}>
-                PIC dan estimasi boleh dikosongkan dan dilengkapi nanti. Estimasi pertama yang diisi menjadi estimasi awal. Tanggal antar tahapan
-                boleh tumpang tindih. Status awal: {PROJECT_STATUS_TEXT.BACKLOG} bila tidak diubah.
+                Estimasi pertama yang diisi menjadi estimasi awal. Tanggal antar tahapan boleh tumpang tindih. Status awal: {PROJECT_STATUS_TEXT.BACKLOG} bila tidak diubah.
               </p>
               <div className={styles.stages3}>
               {STAGES.map(({ kind, title }) => (

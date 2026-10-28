@@ -30,6 +30,8 @@ interface StagePlanFieldsProps {
   readonly kind?: 'BA' | 'DEV' | 'QA';
   /** Menampilkan isian PIC (bawaan true). */
   readonly showPics?: boolean;
+  /** Tampilan polos seperti mockup (label di atas); false memakai kotak MUI untuk dialog. */
+  readonly plain?: boolean;
 }
 
 /**
@@ -39,12 +41,18 @@ interface StagePlanFieldsProps {
  * Efek samping: tidak ada selain state isian di komponen anak.
  * Rujukan: FR-02-02, FR-03-01, Screen [013] field 12 dan 13, Screen [016] field 8 dan 9.
  */
-export function StagePlanFields({ title, names, picOptions, defaultPicIds, showDates, defaultStart, defaultEnd, errors = {}, showPics = true, kind }: StagePlanFieldsProps) {
+export function StagePlanFields({ title, names, picOptions, defaultPicIds, showDates, defaultStart, defaultEnd, errors = {}, showPics = true, kind, plain = true }: StagePlanFieldsProps) {
   return (
     <Box className={kind ? `${styles.sbox} ${styles[kind]}` : undefined} sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
       <Typography variant="h3" sx={{ fontSize: 13, fontWeight: 600 }}>{title}</Typography>
-      {showPics ? <MultiSelectField name={names.pics} label="PIC (boleh lebih dari satu)" options={picOptions} defaultIds={defaultPicIds} error={errors.pics} /> : null}
-      {showDates ? (
+      {showPics ? <MultiSelectField plain={plain} name={names.pics} label={plain ? 'PIC (opsional, boleh lebih dari satu)' : 'PIC (boleh lebih dari satu)'} placeholder="Pilih PIC" options={picOptions} defaultIds={defaultPicIds} error={errors.pics} /> : null}
+      {showDates && plain ? (
+        <>
+          <DateField plain name={names.start} label="Estimasi mulai" defaultValue={defaultStart} error={errors.estimate} />
+          <DateField plain name={names.end} label="Estimasi selesai" defaultValue={defaultEnd} />
+        </>
+      ) : null}
+      {showDates && !plain ? (
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.5 }}>
           <DateField name={names.start} label="Estimasi mulai" defaultValue={defaultStart} error={errors.estimate} helperText="Estimasi pertama menjadi estimasi awal." />
           <DateField name={names.end} label="Estimasi selesai" defaultValue={defaultEnd} />

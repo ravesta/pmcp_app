@@ -74,6 +74,11 @@ try {
   await rina.goto(`${BASE}/project/PRJ-001`);
   check('Detail Project memuat Rencana kerja', (await rina.getByRole('table', { name: 'Rencana kerja project' }).locator('tbody tr').count()) >= 1);
   check('Detail Project memuat Log activity', (await rina.getByRole('table', { name: 'Log activity project' }).locator('tbody tr').count()) >= 1);
+  await rina.getByRole('combobox', { name: 'Tahapan' }).selectOption('BA');
+  await rina.waitForURL('**lstage=BA**');
+  check('filter log di Detail Project langsung berlaku (tanpa Terapkan)', (await rina.getByRole('button', { name: 'Terapkan' }).count()) === 0);
+  check('log Detail Project memuat kolom Item rencana', (await rina.getByRole('columnheader', { name: 'Item rencana' }).count()) === 2);
+  check('baris log memuat judul kartu pada kolom Item rencana', (await rina.getByRole('table', { name: 'Log activity project' }).getByText('Analisis alur klaim').count()) === 1);
   check('Rina tanpa galat konsol', rina.errors.filter((e) => !e.includes('hydrated') && !e.includes('status of 404')).length === 0, JSON.stringify(rina.errors));
 
   // filter seperti mockup: langsung berlaku, tanpa tombol Terapkan; Dari/Sampai hanya pada rentang tanggal

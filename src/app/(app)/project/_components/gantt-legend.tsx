@@ -31,7 +31,7 @@ export function GanttLegend({ showLayers, toggleHref }: GanttLegendProps) {
       <span><i style={{ background: 'transparent', boxShadow: 'inset 0 0 0 2px var(--late)' }} />Selesai terlambat</span>
       <span>◀ ▶ = bar berlanjut di luar periode. Bagian gelap = progres.</span>
       <Link href={toggleHref} className={`${styles.ck} ${showLayers ? styles.on : ''}`} aria-pressed={showLayers}>
-        <span aria-hidden>{showLayers ? '☑' : '☐'}</span> Tampilkan estimasi awal &amp; aktual
+        <span className={styles.cbx} data-on={showLayers} aria-hidden /> Tampilkan estimasi awal &amp; aktual
       </Link>
     </div>
   );

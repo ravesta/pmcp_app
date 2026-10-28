@@ -32,7 +32,7 @@ export function ProjectPrimaryFilters({ params, projectOptions }: PrimaryFilters
   return (
     <>
       <PlainInput id="filter-cari" name="q" label="Cari" defaultValue={params.filter.q} placeholder="ID, nama, referensi, aplikasi, atau PIC" maxLength={100} />
-      <MultiSelectField name="proyek" label="Nama project" options={projectOptions.map((p) => ({ id: p.id, label: `${p.name} (${p.code})` }))} defaultIds={params.filter.projectIds} />
+      <MultiSelectField plain name="proyek" label="Nama project" placeholder="Semua project" options={projectOptions.map((p) => ({ id: p.id, label: `${p.name} (${p.code})` }))} defaultIds={params.filter.projectIds} />
     </>
   );
 }

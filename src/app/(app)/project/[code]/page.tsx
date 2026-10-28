@@ -145,7 +145,7 @@ export default async function ProjectDetailPage({
       <Section title="Jadwal">
         {timeline ? (
           <>
-            <GanttChart projects={[project]} timeline={timeline} showLayers={showLayers} />
+            <GanttChart projects={[project]} timeline={timeline} showLayers={showLayers} compactLabels />
             <GanttLegend showLayers={showLayers} toggleHref={showLayers ? `${base}?lapisan=0` : base} />
           </>
         ) : (
@@ -153,17 +153,16 @@ export default async function ProjectDetailPage({
         )}
       </Section>
 
-      <Section title="Rencana kerja">
+      <Section title="Rencana kerja" hint="kartu Kanban semua PIC pada project ini">
         <ProjectPlans cards={plans} />
       </Section>
-      <Section title="Log activity">
+      <Section title="Log activity" hint="dari kartu Kanban semua PIC pada project ini">
         <ProjectLogs
           page={logs}
           pageNumber={logPage}
           pageSize={[5, 10, 20].includes(logSize) ? logSize : 10}
           stage={logStage ?? ''}
           picId={logPic === null ? '' : String(logPic)}
-          baseHref={base}
           hrefFor={(page) => `${base}?${new URLSearchParams({ ...(logStage ? { lstage: logStage } : {}), ...(logPic !== null ? { lpic: String(logPic) } : {}), ...(logSize !== 10 ? { lper: String(logSize) } : {}), ...(page > 1 ? { lhal: String(page) } : {}) }).toString()}`}
         />
       </Section>

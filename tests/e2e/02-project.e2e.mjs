@@ -18,8 +18,8 @@ async function createProject(page, spec) {
   if (spec.status) await page.getByLabel('Status project').selectOption(spec.status);
   if (spec.reason) await page.getByLabel('Alasan').fill(spec.reason);
   for (const stage of spec.stages ?? []) {
-    const section = page.locator(`xpath=//h3[normalize-space()="Tahapan ${stage.title}"]/..`);
-    const input = section.getByLabel('PIC (boleh lebih dari satu)');
+    const section = page.locator(`xpath=//h3[normalize-space()="${stage.title}"]/..`);
+    const input = section.getByLabel('PIC (opsional, boleh lebih dari satu)');
     await input.click();
     await input.fill(stage.pic);
     await page.getByRole('option', { name: stage.pic, exact: true }).click();
@@ -51,6 +51,8 @@ try {
   check('daftar kosong menampilkan "Belum ada project."', (await mgr.getByText('Belum ada project.').count()) > 0);
 
   await mgr.goto(`${BASE}/project/baru`);
+  check('judul formulir "Project baru"', (await mgr.getByRole('heading', { level: 1, name: 'Project baru' }).count()) === 1);
+  check('tiga kotak tahapan bernama lengkap', (await mgr.locator('h3', { hasText: /^(Business Analyst|Development|Quality Assurance)$/ }).count()) === 3);
   await mgr.getByLabel('Status project').selectOption('DEFERRED');
   await mgr.getByRole('button', { name: 'Simpan project' }).click();
   await mgr.getByText('Nama project wajib diisi.').first().waitFor();
@@ -60,19 +62,34 @@ try {
   await createProject(mgr, {
     name: 'Portal Klaim Online', ref: 'JIRA-101', status: 'RUNNING',
     stages: [
-      { title: 'BA', pic: 'Rina', start: day(0), end: day(4) },
+      { title: 'Business Analyst', pic: 'Rina', start: day(0), end: day(4) },
       { title: 'Development', pic: 'Budi', start: day(7), end: day(25) },
-      { title: 'QA', pic: 'Dimas', start: day(28), end: day(32) },
+      { title: 'Quality Assurance', pic: 'Dimas', start: day(28), end: day(32) },
     ],
   });
   check('banner sukses untuk project pertama', (await mgr.getByText(/berhasil dibuat/).count()) > 0);
-  await createProject(mgr, { name: 'Migrasi Data Polis', status: 'RUNNING', stages: [{ title: 'BA', pic: 'Sari', start: day(-7), end: day(4) }] });
+  await createProject(mgr, { name: 'Migrasi Data Polis', status: 'RUNNING', stages: [{ title: 'Business Analyst', pic: 'Sari', start: day(-7), end: day(4) }] });
   await createProject(mgr, { name: 'Proyek Ditunda', status: 'DEFERRED', reason: 'Menunggu anggaran' });
 
   await mgr.goto(`${BASE}/project`);
   check('Gantt memuat tiga project', (await mgr.locator('section[aria-label^="PRJ-"]').count()) === 3);
   await mgr.goto(`${BASE}/project?v=daftar`);
   check('Daftar memuat tiga baris', (await mgr.locator('tbody tr').count()) === 3);
+
+  // filter seperti mockup: langsung berlaku tanpa tombol Terapkan
+  check('filter Project tanpa tombol Terapkan', (await mgr.getByRole('button', { name: 'Terapkan' }).count()) === 0);
+  await mgr.getByRole('searchbox', { name: 'Cari' }).fill('Migrasi');
+  await mgr.waitForURL('**q=Migrasi**');
+  await mgr.getByText('Menampilkan 1-1 dari 1').waitFor();
+  check('pencarian menyaring daftar sambil mengetik', (await mgr.locator('tbody tr').count()) === 1);
+  await mgr.getByRole('searchbox', { name: 'Cari' }).fill('');
+  await mgr.getByText('Menampilkan 1-3 dari 3').waitFor();
+  await mgr.getByRole('button', { name: /Filter lanjutan/ }).click();
+  await mgr.locator('#filter-pic').selectOption({ label: 'Sari (BA)' });
+  await mgr.waitForURL('**pic=**');
+  await mgr.getByText('Menampilkan 1-1 dari 1').waitFor();
+  check('filter lanjutan PIC langsung berlaku', (await mgr.locator('tbody tr').count()) === 1);
+  await mgr.goto(`${BASE}/project?v=daftar`);
 
   // ---- Detail project sebagai Rina (PIC BA) ----
   const rina = await login(browser, 'rina.ba');

@@ -18,6 +18,8 @@ interface GanttChartProps {
   readonly showLayers: boolean;
   /** PIC yang dipilih pada filter: tahapan miliknya disorot, tahapan PIC lain tetap tampil (FR-12-03 butir 1). */
   readonly highlightPicId?: number;
+  /** Judul grup hanya nama project (tanpa kode dan status), untuk Detail Project yang sudah memuatnya. */
+  readonly compactLabels?: boolean;
   /** Pesan bila tidak ada project pada periode dan filter ini. */
   readonly emptyMessage?: string;
 }
@@ -52,7 +54,7 @@ function trackStyle(timeline: Timeline, startWeekday: number): CSSProperties {
  * Efek samping: tidak ada (komponen murni; nama project dan bar berupa tautan ke Detail Project).
  * Rujukan: FR-12-01, FR-12-02, FR-12-03, BL-17, handoff UX/UI §8 (kolom nama tetap) dan §9, mockup v0.2 (ganttHtml).
  */
-export function GanttChart({ projects, timeline, showLayers, highlightPicId, emptyMessage = 'Tidak ada tahapan pada periode dan filter ini.' }: GanttChartProps) {
+export function GanttChart({ projects, timeline, showLayers, highlightPicId, compactLabels = false, emptyMessage = 'Tidak ada tahapan pada periode dan filter ini.' }: GanttChartProps) {
   if (projects.length === 0) return <div className={styles.empty}>{emptyMessage}</div>;
   const startWeekday = dayOfWeek(timeline.start);
   const track = trackStyle(timeline, startWeekday);
@@ -74,8 +76,8 @@ export function GanttChart({ projects, timeline, showLayers, highlightPicId, emp
             <div className={`${styles.gr} ${styles.ph}`}>
               <div className={styles.gl}>
                 <Link href={`/project/${project.code}`} className={styles.name} title="Buka detail project">{project.name}</Link>
-                <span className={styles.code}>({project.code})</span>
-                <span className={`${styles.pst} ${styles[project.status]}`}>- {PROJECT_STATUS_TEXT[project.status]}</span>
+                {compactLabels ? null : <span className={styles.code}>({project.code})</span>}
+                {compactLabels ? null : <span className={`${styles.pst} ${styles[project.status]}`}>- {PROJECT_STATUS_TEXT[project.status]}</span>}
               </div>
               <div className={styles.gc} style={track}>{today}</div>
             </div>

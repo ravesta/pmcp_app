@@ -34,6 +34,8 @@ export interface ActionFormProps {
   readonly showSuccess?: boolean;
   /** Tombol tambahan di sebelah kiri Simpan (mis. Batal). */
   readonly secondary?: ReactNode;
+  /** Menaruh tombol Simpan sebelum tombol tambahan dan merapatkan keduanya ke kiri (gaya formulir halaman pada mockup). */
+  readonly submitFirst?: boolean;
   /** `dialog` memakai gaya isi dan aksi dialog MUI; `inline` memakai kotak biasa. */
   readonly layout?: 'dialog' | 'inline';
   readonly children: (context: ActionFormContext) => ReactNode;
@@ -55,6 +57,7 @@ export function ActionForm({
   showSuccess = true,
   secondary,
   layout = 'inline',
+  submitFirst = false,
   children,
 }: ActionFormProps) {
   const [state, formAction, pending] = useActionState(action, initialActionState);
@@ -70,12 +73,8 @@ export function ActionForm({
       <ActionAlert state={state} showSuccess={showSuccess} />
     </>
   );
-  const buttons = (
-    <>
-      {secondary}
-      <Button type="submit" variant="contained" color={submitColor} disabled={pending}>{submitLabel}</Button>
-    </>
-  );
+  const submit = <Button type="submit" variant="contained" color={submitColor} disabled={pending}>{submitLabel}</Button>;
+  const buttons = submitFirst ? <>{submit}{secondary}</> : <>{secondary}{submit}</>;
   return (
     <Box component="form" onSubmit={onSubmit} noValidate>
       {layout === 'dialog' ? (
@@ -86,7 +85,7 @@ export function ActionForm({
       ) : (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {body}
-          <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>{buttons}</Box>
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', justifyContent: submitFirst ? 'flex-start' : 'flex-end' }}>{buttons}</Box>
         </Box>
       )}
     </Box>

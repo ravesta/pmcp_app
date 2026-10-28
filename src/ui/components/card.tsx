@@ -58,6 +58,8 @@ export function CardHeader({ title, subtitle, actions, level = 2 }: CardHeaderPr
 /** Properti bagian bertepi di dalam kartu. */
 interface SectionProps {
   readonly title: string;
+  /** Keterangan kecil di samping judul (mis. sumber data bagian). */
+  readonly hint?: string;
   readonly actions?: ReactNode;
   readonly children: ReactNode;
   /** Menempelkan penanda `id` untuk tautan langsung (mis. ke tahapan). */
@@ -66,15 +68,18 @@ interface SectionProps {
 
 /**
  * Bagian bertepi di dalam kartu dengan judul kecil dan tombol opsional (Informasi project, Tahapan, Jadwal, dst.).
- * Masukan: judul, tombol, isi, dan id. Keluaran: bagian bertepi.
+ * Masukan: judul, keterangan, tombol, isi, dan id. Keluaran: bagian bertepi.
  * Efek samping: tidak ada (komponen murni).
  * Rujukan: mockup v0.2 (kelas fsec), Screen [014].
  */
-export function Section({ title, actions, children, id }: SectionProps) {
+export function Section({ title, hint, actions, children, id }: SectionProps) {
   return (
     <Box component="section" id={id} aria-label={title} sx={{ border: '1px solid var(--line)', borderRadius: '10px', p: '14px 16px', display: 'flex', flexDirection: 'column', gap: 1.5, scrollMarginTop: 16 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-        <Typography variant="h3" component="h3" sx={{ fontSize: 13 }}>{title}</Typography>
+        <Typography variant="h3" component="h3" sx={{ fontSize: 13 }}>
+          {title}
+          {hint ? <Box component="span" sx={{ ml: 0.75, fontSize: 12, fontWeight: 400, color: 'var(--muted)' }}>{hint}</Box> : null}
+        </Typography>
         {actions}
       </Box>
       {children}

@@ -240,8 +240,8 @@ export function createPrismaKanbanQueries(prisma: PrismaClient): KanbanQueryRepo
       const base = 'FROM work_log w JOIN card c ON c.id = w.card_id JOIN pic p ON p.id = w.owner_pic_id';
       const minutes = 'EXTRACT(EPOCH FROM (w.end_time - w.start_time)) / 60';
       const [rows, count, perStage, perPic] = await Promise.all([
-        prisma.$queryRawUnsafe<Array<{ id: bigint; work_date: Date; start_time: Date; end_time: Date; pic_name: string; stage: StageKind; step_name: string | null; description: string; code: string }>>(
-          `SELECT w.id, w.work_date, w.start_time, w.end_time, p.name AS pic_name, c.stage, w.step_name, w.description, c.code ${base} WHERE ${where} ORDER BY w.work_date DESC, w.start_time DESC, w.id DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+        prisma.$queryRawUnsafe<Array<{ id: bigint; work_date: Date; start_time: Date; end_time: Date; pic_name: string; stage: StageKind; step_name: string | null; description: string; code: string; title: string }>>(
+          `SELECT w.id, w.work_date, w.start_time, w.end_time, p.name AS pic_name, c.stage, w.step_name, w.description, c.code, c.title ${base} WHERE ${where} ORDER BY w.work_date DESC, w.start_time DESC, w.id DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
           ...params,
           pageSize,
           (page - 1) * pageSize,
@@ -260,6 +260,7 @@ export function createPrismaKanbanQueries(prisma: PrismaClient): KanbanQueryRepo
           stepName: row.step_name,
           description: row.description,
           cardCode: row.code,
+          cardTitle: row.title,
         })),
         total: Number(count[0]?.total ?? 0),
         totalMinutes: perStage.reduce((sum, row) => sum + row.m, 0),

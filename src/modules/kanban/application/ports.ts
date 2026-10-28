@@ -156,6 +156,8 @@ export interface ProjectLogRow {
   readonly stepName: string | null;
   readonly description: string;
   readonly cardCode: string;
+  /** Judul kartu rencana asal log (kolom Item rencana). */
+  readonly cardTitle: string;
 }
 
 /** Hasil daftar log project: halaman, total, dan ringkasan waktu per tahapan dan per PIC (seluruh project). */
