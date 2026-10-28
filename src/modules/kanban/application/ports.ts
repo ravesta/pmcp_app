@@ -198,6 +198,10 @@ export interface CardRepository {
 export interface KanbanQueryRepository {
   findCard(cardId: number): Promise<CardRecord | null>;
   listBoard(filter: BoardFilter): Promise<BoardCardRow[]>;
+  /** Papan per kolom dengan batas jumlah kartu per kolom; `total` selalu jumlah sebenarnya menurut filter. */
+  listBoardColumns(filter: BoardFilter, limit: number): Promise<Record<CardColumn, { rows: BoardCardRow[]; total: number }>>;
+  /** Jumlah kartu project belum Done yang memperpanjang estimasi tahapan (definisi sama dengan filter Kanban). */
+  countExtending(): Promise<number>;
   listCancelled(filter: BoardFilter): Promise<BoardCardRow[]>;
   getBoardCard(cardId: number): Promise<BoardCardRow | null>;
   listCardLogs(cardId: number): Promise<WorkLogRow[]>;

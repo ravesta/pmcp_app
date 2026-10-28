@@ -64,6 +64,7 @@ export function parseKanbanParams(raw: RawSearchParams, actorPicId: number | nul
       kind,
       q: (single(raw, 'q') ?? '').trim().slice(0, 100),
       extendsOnly: single(raw, 'perpanjang') === '1',
+      columnLimit: /^\d{2,3}$/.test(single(raw, 'batas') ?? '') ? Number(single(raw, 'batas')) : undefined,
     },
     picChoice,
     openCardId: cardRaw && /^\d{1,9}$/.test(cardRaw) ? Number(cardRaw) : null,

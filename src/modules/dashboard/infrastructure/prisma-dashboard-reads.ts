@@ -57,9 +57,9 @@ export function createPrismaDashboardReads(prisma: PrismaClient): DashboardReadR
     },
 
     /** Kartu terbuka. Efek samping: tidak ada (hanya baca). */
-    async listOpenCards(picId) {
+    async listOpenCards(picId, columns) {
       const rows = await prisma.card.findMany({
-        where: { cancelled_at: null, board_column: { not: 'DONE' }, ...(picId === null ? {} : { owner_pic_id: BigInt(picId) }) },
+        where: { cancelled_at: null, board_column: columns ? { in: [...columns] } : { not: 'DONE' }, ...(picId === null ? {} : { owner_pic_id: BigInt(picId) }) },
         select: CARD_SELECT,
       });
       return rows.map(toDashCard);

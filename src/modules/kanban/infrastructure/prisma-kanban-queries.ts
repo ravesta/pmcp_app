@@ -44,6 +44,21 @@ function estimateOf(start: Date | null, end: Date | null): Estimate | null {
  */
 export function createPrismaKanbanQueries(prisma: PrismaClient): KanbanQueryRepository {
   /**
+   * Mencari id kartu project belum Done (tidak dibatalkan) yang ditandai permanen sebagai asal perpanjangan estimasi
+   * tahapan atau yang rencananya melewati estimasi selesai terkini tahapannya, dalam satu kueri.
+   * Masukan: tidak ada. Keluaran: daftar id kartu.
+   * Efek samping: tidak ada (hanya baca).
+   * Rujukan: FR-04-01 kartu 6, FR-16-01 butir 4, FR-13-05 butir 5, NFR-14 (angka sama dengan layar tujuan).
+   */
+  async function extendingCardIds(): Promise<bigint[]> {
+    const rows = await prisma.$queryRawUnsafe<Array<{ id: bigint }>>(
+      `SELECT c.id FROM card c JOIN project_stage s ON s.project_id = c.project_id AND s.stage = c.stage
+       WHERE c.kind = 'PROJECT' AND c.cancelled_at IS NULL AND c.board_column <> 'DONE' AND (c.extends_stage OR (s.est_end IS NOT NULL AND c.plan_end > s.est_end))`,
+    );
+    return rows.map((row) => row.id);
+  }
+
+  /**
    * Menghitung jumlah log dan menit log untuk sekumpulan kartu dalam satu kueri.
    * Masukan: id kartu. Keluaran: peta id kartu ke agregat.
    * Efek samping: tidak ada (hanya baca).
@@ -99,11 +114,11 @@ export function createPrismaKanbanQueries(prisma: PrismaClient): KanbanQueryRepo
 
   /**
    * Menyusun kondisi papan dari filter: PIC, jenis, kata kunci, dan periode.
-   * Masukan: filter dan penanda daftar dibatalkan. Keluaran: kondisi Prisma.
+   * Masukan: filter, penanda daftar dibatalkan, dan id kartu pemanjang estimasi (untuk filter itu). Keluaran: kondisi Prisma.
    * Efek samping: tidak ada (fungsi murni).
    * Rujukan: FR-16-01 butir 3 dan 4, BL-37.
    */
-  function boardWhere(filter: BoardFilter, cancelled: boolean): Prisma.cardWhereInput {
+  function boardWhere(filter: BoardFilter, cancelled: boolean, extendingIds: ReadonlyArray<bigint> = []): Prisma.cardWhereInput {
     const and: Prisma.cardWhereInput[] = [cancelled ? { cancelled_at: { not: null } } : { cancelled_at: null }];
     if (filter.picId !== null) and.push({ owner_pic_id: BigInt(filter.picId) });
     if (filter.kind !== null) and.push({ kind: filter.kind });
@@ -111,7 +126,7 @@ export function createPrismaKanbanQueries(prisma: PrismaClient): KanbanQueryRepo
       const contains = { contains: filter.q, mode: 'insensitive' as const };
       and.push({ OR: [{ title: contains }, { code: contains }, { category_name: contains }, { project: { name: contains } }, { project: { code: contains } }] });
     }
-    if (filter.extendsOnly) and.push({ kind: 'PROJECT', board_column: { not: 'DONE' } });
+    if (filter.extendsOnly) and.push({ id: { in: [...extendingIds] } });
     else if (filter.range && !cancelled) {
       const from = toDbDate(filter.range.start) as Date;
       const to = toDbDate(filter.range.end) as Date;
@@ -129,10 +144,34 @@ export function createPrismaKanbanQueries(prisma: PrismaClient): KanbanQueryRepo
 
     /** Papan: kartu tidak dibatalkan menurut filter. Efek samping: tidak ada (hanya baca). */
     async listBoard(filter) {
-      const rows = await prisma.card.findMany({ where: boardWhere(filter, false), include: BOARD_INCLUDE, orderBy: [{ plan_end: 'asc' }, { id: 'asc' }] });
-      const board = await toBoardRows(rows);
-      if (!filter.extendsOnly) return board;
-      return board.filter((row) => row.card.extendsStage || (row.stageEstimate !== null && row.card.planEnd > row.stageEstimate.end));
+      const ids = filter.extendsOnly ? await extendingCardIds() : [];
+      const rows = await prisma.card.findMany({ where: boardWhere(filter, false, ids), include: BOARD_INCLUDE, orderBy: [{ plan_end: 'asc' }, { id: 'asc' }] });
+      return toBoardRows(rows);
+    },
+
+    /** Papan per kolom dengan batas kartu per kolom. Efek samping: tidak ada (hanya baca). */
+    async listBoardColumns(filter, limit) {
+      const ids = filter.extendsOnly ? await extendingCardIds() : [];
+      const columns = ['PLANNED', 'IN_PROGRESS', 'DONE'] as const;
+      const parts = await Promise.all(
+        columns.map(async (column) => {
+          const where = { AND: [boardWhere(filter, false, ids), { board_column: column }] };
+          const [total, rows] = await Promise.all([
+            prisma.card.count({ where }),
+            prisma.card.findMany({ where, include: BOARD_INCLUDE, take: limit, orderBy: column === 'DONE' ? [{ done_on: 'desc' }, { id: 'desc' }] : [{ plan_end: 'asc' }, { id: 'asc' }] }),
+          ]);
+          return { column, total, rows };
+        }),
+      );
+      const board = await toBoardRows(parts.flatMap((part) => part.rows));
+      const result = { PLANNED: { rows: [] as BoardCardRow[], total: 0 }, IN_PROGRESS: { rows: [] as BoardCardRow[], total: 0 }, DONE: { rows: [] as BoardCardRow[], total: 0 } };
+      for (const part of parts) result[part.column] = { rows: board.filter((row) => row.card.column === part.column), total: part.total };
+      return result;
+    },
+
+    /** Jumlah kartu pemanjang estimasi tahapan. Efek samping: tidak ada (hanya baca). */
+    async countExtending() {
+      return (await extendingCardIds()).length;
     },
 
     /** Daftar kartu dibatalkan menurut filter (tanpa batas periode). Efek samping: tidak ada (hanya baca). */

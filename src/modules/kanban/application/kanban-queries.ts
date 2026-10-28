@@ -27,6 +27,9 @@ import type {
 } from './ports';
 import { toCardView, type CardView, type CardViewContext } from './view-models';
 
+/** Jumlah kartu per kolom yang dimuat pertama kali; selebihnya lewat "Tampilkan lebih banyak" (anggaran muat 3 detik). */
+const DEFAULT_COLUMN_LIMIT = 40;
+
 /** Periode papan dan kepatuhan (FR-16-01 butir 4, FR-21-05 butir 4). */
 export type PeriodKey = 'THIS_WEEK' | 'LAST_WEEK' | 'THIS_MONTH' | 'RANGE';
 
@@ -41,12 +44,17 @@ export interface BoardInput {
   readonly kind: CardKind | null;
   readonly q: string;
   readonly extendsOnly: boolean;
+  /** Batas kartu per kolom yang ditampilkan (bawaan 40); jumlah sebenarnya tetap tampil. */
+  readonly columnLimit?: number;
 }
 
 /** Papan Kanban siap tampil. */
 export interface BoardView {
   readonly range: DateRange;
   readonly columns: Readonly<Record<CardColumn, ReadonlyArray<CardView>>>;
+  /** Jumlah kartu sebenarnya per kolom menurut filter (dapat lebih besar dari yang tampil). */
+  readonly totals: Readonly<Record<CardColumn, number>>;
+  readonly columnLimit: number;
   readonly cancelled: ReadonlyArray<CardView>;
   readonly pics: ReadonlyArray<{ id: number; name: string; stage: StageKind }>;
   /** True bila pelaku PIC (dapat membuat kartu). */
@@ -87,10 +95,12 @@ export async function getBoard(deps: KanbanDeps, actor: Actor, input: BoardInput
   const ctx = await viewContext(deps, actor);
   const range = resolvePeriod(input.period, input.from, input.to, ctx.today);
   const filter: BoardFilter = { range: input.extendsOnly ? null : range, picId: input.picId, kind: input.kind, q: input.q.trim(), extendsOnly: input.extendsOnly };
-  const [rows, cancelled, pics] = await Promise.all([deps.queries.listBoard(filter), deps.queries.listCancelled(filter), deps.reference.listPics()]);
+  const columnLimit = Math.min(500, Math.max(10, input.columnLimit ?? DEFAULT_COLUMN_LIMIT));
+  const [board, cancelled, pics] = await Promise.all([deps.queries.listBoardColumns(filter, columnLimit), deps.queries.listCancelled(filter), deps.reference.listPics()]);
   const columns: Record<CardColumn, CardView[]> = { PLANNED: [], IN_PROGRESS: [], DONE: [] };
-  for (const row of rows) columns[row.card.column].push(toCardView(row, ctx));
-  return { range, columns, cancelled: cancelled.map((row) => toCardView(row, ctx)), pics, canCreate: actor.role === 'PIC' };
+  for (const column of ['PLANNED', 'IN_PROGRESS', 'DONE'] as const) columns[column] = board[column].rows.map((row) => toCardView(row, ctx));
+  const totals = { PLANNED: board.PLANNED.total, IN_PROGRESS: board.IN_PROGRESS.total, DONE: board.DONE.total };
+  return { range, columns, totals, columnLimit, cancelled: cancelled.map((row) => toCardView(row, ctx)), pics, canCreate: actor.role === 'PIC' };
 }
 
 /** Rincian satu kartu: tampilan, log, riwayat jadwal ulang dan progres, serta pilihan formulir. */

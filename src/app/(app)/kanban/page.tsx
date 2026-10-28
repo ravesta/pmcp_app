@@ -1,5 +1,6 @@
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
+import Link from 'next/link';
 import { getBoard, getCardDetail, getCardFormOptions, getCompliance, COLUMN_LABEL } from '@/modules/kanban';
 import { getContainer } from '@/platform/container';
 import { formatDisplayDate } from '@/shared/iso-date';
@@ -39,7 +40,7 @@ export default async function KanbanPage({ searchParams }: { searchParams: Promi
     params.openCardId !== null ? getCardDetail(deps, actor, params.openCardId) : Promise.resolve(null),
   ]);
 
-  const total = COLUMN_ORDER.reduce((sum, column) => sum + board.columns[column].length, 0);
+  const total = COLUMN_ORDER.reduce((sum, column) => sum + board.totals[column], 0);
   const closeHref = kanbanHref(raw, { kartu: null, buat: null, dibuat: null });
   const isPic = actor.role === 'PIC';
   const selectedPic = params.board.picId === null ? null : board.pics.find((pic) => pic.id === params.board.picId);
@@ -73,13 +74,19 @@ export default async function KanbanPage({ searchParams }: { searchParams: Promi
               <DropColumn key={column} column={column} label={`Kolom ${COLUMN_LABEL[column]}`}>
                 <header className={styles.colHead}>
                   <h3>{COLUMN_LABEL[column]}</h3>
-                  <span className={styles.count}>{cards.length}</span>
+                  <span className={styles.count}>{board.totals[column]}</span>
                   <span className={`${styles.muted} ${styles.small}`}>{COLUMN_DESCRIPTION[column]}</span>
                 </header>
                 <div className={styles.body}>
                   {cards.length > 0
                     ? cards.map((card) => <KanbanCard key={card.id} card={card} openHref={kanbanHref(raw, { kartu: String(card.id), buat: null })} showOwner={!isPic || card.owner.picId !== actor.picId} />)
                     : <div className={styles.empty}>Belum ada kartu</div>}
+                  {board.totals[column] > cards.length ? (
+                    <div className={`${styles.small} ${styles.muted}`} role="status">
+                      Menampilkan {cards.length} dari {board.totals[column]} kartu.{' '}
+                      <Link href={kanbanHref(raw, { batas: String(board.columnLimit + 40) })}>Tampilkan lebih banyak</Link>
+                    </div>
+                  ) : null}
                 </div>
               </DropColumn>
             );

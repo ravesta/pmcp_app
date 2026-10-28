@@ -171,12 +171,12 @@ export async function getHeadDashboard(deps: DashboardDeps, actor: Actor, input:
   const [projects, pics, extending, weekCards, weekLogs, rangeCards, rangeLogs, openCards, compliance] = await Promise.all([
     listActiveProjectViews(deps.project, actor),
     deps.reads.listLoginPics(),
-    deps.kanban.queries.listBoard({ range: null, picId: null, kind: null, q: '', extendsOnly: true }),
+    deps.kanban.queries.countExtending(),
     deps.reads.listCardsOverlapping(thisWeek),
     deps.reads.logMinutesByPic(thisWeek),
     deps.reads.listCardsOverlapping(range),
     deps.reads.logMinutesByPic(range),
-    deps.reads.listOpenCards(null),
+    deps.reads.listOpenCards(null, ['IN_PROGRESS']),
     getCompliance(deps.kanban, { period: 'THIS_WEEK', from: null, to: null }),
   ]);
   const stages = openStages(projects);
@@ -217,7 +217,7 @@ export async function getHeadDashboard(deps: DashboardDeps, actor: Actor, input:
       due7: due.length,
       overloaded,
       held: stages.filter(({ stage }) => stage.status === 'HELD').length,
-      extending: extending.length,
+      extending,
       incomplete: projects.filter((project) => !project.planning.isComplete).length,
     },
     risks: { rows: risks.slice(0, RISK_LIMIT), total: risks.length },

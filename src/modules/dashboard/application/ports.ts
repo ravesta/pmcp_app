@@ -84,8 +84,8 @@ export interface DashboardReadRepository {
   listLoginPics(): Promise<LoginPic[]>;
   /** Kartu tidak dibatalkan yang rencananya beririsan dengan periode. */
   listCardsOverlapping(range: DateRange): Promise<DashCard[]>;
-  /** Kartu belum Done dan tidak dibatalkan milik PIC (atau semua PIC bila null), tanpa batas periode. */
-  listOpenCards(picId: number | null): Promise<DashCard[]>;
+  /** Kartu belum Done dan tidak dibatalkan milik PIC (atau semua PIC bila null), tanpa batas periode; dapat dibatasi kolom. */
+  listOpenCards(picId: number | null, columns?: ReadonlyArray<'PLANNED' | 'IN_PROGRESS'>): Promise<DashCard[]>;
   /** Total menit log per PIC pada periode (termasuk log kartu yang dibatalkan). */
   logMinutesByPic(range: DateRange): Promise<Map<number, number>>;
   /** Tanggal log terakhir per kartu (kartu tanpa log tidak ada di peta). */

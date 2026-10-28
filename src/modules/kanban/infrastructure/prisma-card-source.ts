@@ -57,7 +57,8 @@ export function createPrismaCardSource(prisma: PrismaClient): CardSourcePort {
         where: {
           kind: 'PROJECT',
           cancelled_at: null,
-          OR: stages.map((stage) => ({ project_id: BigInt(stage.projectId), stage: stage.kind })),
+          // IN pada project (bukan ratusan klausa OR pasangan project-tahapan); pencocokan tahapan dilakukan di bawah
+          project_id: { in: [...new Set(stages.map((stage) => BigInt(stage.projectId)))] },
         },
         select: {
           project_id: true,
