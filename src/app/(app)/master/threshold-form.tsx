@@ -3,8 +3,8 @@
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import Paper from '@mui/material/Paper';
 import TextField from '@mui/material/TextField';
+import { Card } from '@/ui/components/card';
 import { useActionState } from 'react';
 import { useRetainedSubmit } from '@/ui/hooks/use-retained-submit';
 import { initialActionState } from '../../_lib/action-state';
@@ -29,13 +29,13 @@ export function ThresholdForm({ settingKey, label, value }: ThresholdFormProps) 
   const error = state.fields?.value;
   const onSubmit = useRetainedSubmit(formAction);
   return (
-    <Paper variant="outlined" sx={{ p: 2 }}>
+    <Card>
       <Box component="form" onSubmit={onSubmit} noValidate sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <input type="hidden" name="key" value={settingKey} />
         <TextField name="value" type="number" label={label} defaultValue={value} error={Boolean(error)} helperText={error} sx={{ maxWidth: 320 }} slotProps={{ htmlInput: { min: 1, max: 20 } }} />
         <Button type="submit" variant="outlined" disabled={pending}>Simpan batas</Button>
       </Box>
       {state.ok ? <Alert severity="success" role="status" sx={{ mt: 1 }}>{state.message}</Alert> : null}
-    </Paper>
+    </Card>
   );
 }

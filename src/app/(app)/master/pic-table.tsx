@@ -4,7 +4,6 @@ import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
-import Chip from '@mui/material/Chip';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
@@ -15,7 +14,6 @@ import FormHelperText from '@mui/material/FormHelperText';
 import FormLabel from '@mui/material/FormLabel';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
-import Paper from '@mui/material/Paper';
 import Radio from '@mui/material/Radio';
 import RadioGroup from '@mui/material/RadioGroup';
 import Select from '@mui/material/Select';
@@ -28,6 +26,8 @@ import TableRow from '@mui/material/TableRow';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { useActionState, useEffect, useState } from 'react';
+import { Card } from '@/ui/components/card';
+import { ToneChip } from '@/ui/components/tone-chip';
 import { useRetainedSubmit } from '@/ui/hooks/use-retained-submit';
 import { initialActionState, type ActionState } from '../../_lib/action-state';
 import { picAction } from './actions';
@@ -62,7 +62,7 @@ export function PicTable({ pics }: { readonly pics: ReadonlyArray<PicView> }) {
   const [dialog, setDialog] = useState<{ kind: 'add' } | { kind: 'rename' | 'reset' | 'toggle'; pic: PicView } | null>(null);
   const [temporary, setTemporary] = useState<TemporaryShown | null>(null);
   return (
-    <Paper variant="outlined" sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Card>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
         <div>
           <Typography variant="h2">Master PIC</Typography>
@@ -80,9 +80,9 @@ export function PicTable({ pics }: { readonly pics: ReadonlyArray<PicView> }) {
               <TableRow key={pic.id} hover>
                 <TableCell>{pic.name}</TableCell>
                 <TableCell>{STAGE_LABEL[pic.stage]}</TableCell>
-                <TableCell>{pic.username ? <Chip label="Ya" color="success" /> : <Chip label="Tidak (dicatat)" variant="outlined" />}</TableCell>
+                <TableCell>{pic.username ? <ToneChip text="Ya" tone="ok" /> : <ToneChip text="Tidak (dicatat)" tone="neutral" />}</TableCell>
                 <TableCell sx={{ fontFamily: 'monospace' }}>{pic.username ?? '-'}</TableCell>
-                <TableCell><Chip label={pic.isActive ? 'Aktif' : 'Nonaktif'} color={pic.isActive ? 'success' : 'default'} variant={pic.isActive ? 'filled' : 'outlined'} /></TableCell>
+                <TableCell><ToneChip text={pic.isActive ? 'Aktif' : 'Nonaktif'} tone={pic.isActive ? 'ok' : 'neutral'} /></TableCell>
                 <TableCell>
                   <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                     <Button size="small" variant="outlined" onClick={() => setDialog({ kind: 'rename', pic })}>Ubah nama</Button>
@@ -102,7 +102,7 @@ export function PicTable({ pics }: { readonly pics: ReadonlyArray<PicView> }) {
       {dialog?.kind === 'reset' ? <ResetPicDialog pic={dialog.pic} onClose={() => setDialog(null)} onTemporary={(shown) => { setDialog(null); setTemporary(shown); }} /> : null}
       {dialog?.kind === 'toggle' ? <TogglePicDialog pic={dialog.pic} onClose={() => setDialog(null)} /> : null}
       {temporary ? <TemporaryPasswordDialog shown={temporary} onDone={() => setTemporary(null)} /> : null}
-    </Paper>
+    </Card>
   );
 }
 

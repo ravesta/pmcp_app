@@ -1,9 +1,8 @@
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
-import Paper from '@mui/material/Paper';
-import Typography from '@mui/material/Typography';
 import type { ReactNode } from 'react';
 import { can } from '@/modules/auth';
+import { Card, CardHeader } from '@/ui/components/card';
 import { requirePageSession } from '../../_lib/session';
 import { MasterNav } from './master-nav';
 
@@ -20,13 +19,10 @@ export default async function MasterLayout({ children }: { children: ReactNode }
   }
   return (
     <>
-      <Paper variant="outlined" sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
-        <div>
-          <Typography variant="h1">Master</Typography>
-          <Typography variant="body2" color="text.secondary">Pilih data master yang ingin dikelola</Typography>
-        </div>
+      <Card>
+        <CardHeader level={1} title="Master" subtitle="Pilih data master yang ingin dikelola" />
         <MasterNav />
-      </Paper>
+      </Card>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>{children}</Box>
     </>
   );

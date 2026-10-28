@@ -54,7 +54,12 @@ export function createAppTheme() {
       MuiButton: { defaultProps: { disableElevation: true }, styleOverrides: { root: { minHeight: 36 } } },
       MuiTextField: { defaultProps: { size: 'small', fullWidth: true } },
       MuiChip: { defaultProps: { size: 'small' } },
-      MuiTableCell: { styleOverrides: { head: { fontWeight: 600, fontSize: '0.75rem' } } },
+      MuiTableCell: {
+        styleOverrides: {
+          root: { borderBottom: '1px solid var(--line)' },
+          head: { fontWeight: 600, fontSize: '0.75rem', color: 'var(--muted)', backgroundColor: 'var(--soft)', whiteSpace: 'nowrap' },
+        },
+      },
     },
   });
 }

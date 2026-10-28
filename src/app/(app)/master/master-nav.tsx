@@ -1,7 +1,6 @@
 'use client';
 
-import Tab from '@mui/material/Tab';
-import Tabs from '@mui/material/Tabs';
+import Box from '@mui/material/Box';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -17,19 +16,29 @@ export const MASTER_TABS: ReadonlyArray<{ slug: string; label: string }> = [
 ];
 
 /**
- * Sub menu Master berupa tab yang dapat digulir pada layar sempit.
- * Masukan: tidak ada. Keluaran: elemen tab.
+ * Sub menu Master berupa deretan tombol pil (satu aktif) yang membungkus pada layar sempit, seperti mockup v0.2.
+ * Masukan: tidak ada. Keluaran: daftar tautan dengan penanda halaman aktif (`aria-current`).
  * Efek samping: tidak ada (navigasi lewat tautan).
- * Rujukan: FR-08-06, BL-47, handoff UX/UI §4.
+ * Rujukan: FR-08-06, BL-47, mockup v0.2 (kelas pill), handoff UX/UI §4.
  */
 export function MasterNav() {
   const pathname = usePathname();
-  const index = MASTER_TABS.findIndex((tab) => pathname === `/master/${tab.slug}`);
   return (
-    <Tabs value={index === -1 ? false : index} variant="scrollable" scrollButtons="auto" aria-label="Data master">
-      {MASTER_TABS.map((tab) => (
-        <Tab key={tab.slug} label={tab.label} component={Link} href={`/master/${tab.slug}`} />
-      ))}
-    </Tabs>
+    <Box component="nav" aria-label="Data master" sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+      {MASTER_TABS.map((tab) => {
+        const active = pathname === `/master/${tab.slug}`;
+        return (
+          <Box
+            key={tab.slug}
+            component={Link}
+            href={`/master/${tab.slug}`}
+            aria-current={active ? 'page' : undefined}
+            sx={{ px: 2, minHeight: 34, display: 'inline-flex', alignItems: 'center', borderRadius: 17, border: '1px solid var(--line)', fontWeight: 500, textDecoration: 'none', color: active ? 'var(--on-accent)' : 'var(--muted)', bgcolor: active ? 'var(--accent)' : 'var(--surface)', borderColor: active ? 'var(--accent)' : 'var(--line)', '&:hover': { bgcolor: active ? 'var(--accent)' : 'var(--soft)' } }}
+          >
+            {tab.label}
+          </Box>
+        );
+      })}
+    </Box>
   );
 }

@@ -3,8 +3,6 @@
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -14,6 +12,8 @@ import TableRow from '@mui/material/TableRow';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { useActionState, useState } from 'react';
+import { Card, CardHeader } from '@/ui/components/card';
+import { ToneChip } from '@/ui/components/tone-chip';
 import { useRetainedSubmit } from '@/ui/hooks/use-retained-submit';
 import { initialActionState } from '../../_lib/action-state';
 import { masterAction } from './actions';
@@ -56,11 +56,8 @@ export function MasterListCard(props: MasterListCardProps) {
   const onAdd = useRetainedSubmit(formAction);
   const nameError = state.fields?.name;
   return (
-    <Paper variant="outlined" sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <div>
-        <Typography variant="h2">{props.title}</Typography>
-        <Typography variant="body2" color="text.secondary">{props.subtitle}</Typography>
-      </div>
+    <Card>
+      <CardHeader title={props.title} subtitle={props.subtitle} />
       <Box component="form" onSubmit={onAdd} noValidate sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
         <input type="hidden" name="intent" value="add" />
         <input type="hidden" name="kind" value={props.kind} />
@@ -104,12 +101,12 @@ export function MasterListCard(props: MasterListCardProps) {
                   ) : (
                     item.name
                   )}
-                  {item.systemKey ? <Chip label="Bawaan sistem" sx={{ ml: 1 }} /> : null}
+                  {item.systemKey ? <Box component="span" sx={{ ml: 1 }}><ToneChip text="Bawaan sistem" tone="neutral" /></Box> : null}
                 </TableCell>
                 <TableCell>
-                  <Chip label={item.isActive ? 'Aktif' : 'Nonaktif'} color={item.isActive ? 'success' : 'default'} variant={item.isActive ? 'filled' : 'outlined'} />
+                  <ToneChip text={item.isActive ? 'Aktif' : 'Nonaktif'} tone={item.isActive ? 'ok' : 'neutral'} />
                 </TableCell>
-                <TableCell>{item.usedCount} {props.usageUnit}</TableCell>
+                <TableCell className="mono">{item.usedCount} {props.usageUnit}</TableCell>
                 <TableCell>
                   <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                     {props.orderable ? (
@@ -134,7 +131,7 @@ export function MasterListCard(props: MasterListCardProps) {
       <Typography variant="caption" color="text.secondary">
         Tidak dihapus, hanya dinonaktifkan. Nama pada data lama tidak ikut berubah.
       </Typography>
-    </Paper>
+    </Card>
   );
 }
 

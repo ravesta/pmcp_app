@@ -1,7 +1,6 @@
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
-import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import Link from 'next/link';
@@ -14,6 +13,7 @@ import { requirePageSession } from '../../../_lib/session';
 import { MasterListCard } from '../master-list-card';
 import { PicTable } from '../pic-table';
 import { ThresholdForm } from '../threshold-form';
+import { Card, CardHeader } from '@/ui/components/card';
 import { LinkChip } from '@/ui/components/link-controls';
 
 /** Konfigurasi tampilan tiap sub menu master pilihan. */
@@ -108,11 +108,8 @@ async function AuditPage({ actorId, query }: { actorId: Awaited<ReturnType<typeo
   const pages = Math.max(1, Math.ceil(total / pageSize));
   const link = (target: number) => `/master/jejak?${new URLSearchParams({ ...(category ? { jenis: category } : {}), ...(pelaku ? { pelaku: String(pelaku) } : {}), baris: String(pageSize), halaman: String(target) }).toString()}`;
   return (
-    <Paper variant="outlined" sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <div>
-        <Typography variant="h2">Jejak perubahan</Typography>
-        <Typography variant="body2" color="text.secondary">Hanya baca. Catatan tidak dapat diubah atau dihapus. Waktu memakai zona Asia/Jakarta.</Typography>
-      </div>
+    <Card>
+      <CardHeader title="Jejak perubahan" subtitle="Hanya baca. Catatan tidak dapat diubah atau dihapus. Waktu memakai zona Asia/Jakarta." />
       <Box component="form" method="get" sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'flex-end' }}>
         <label>Jenis<br /><select name="jenis" defaultValue={category ?? ''} style={{ minHeight: 36 }}>{AUDIT_FILTERS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
         <label>Pelaku<br /><select name="pelaku" defaultValue={pelaku ? String(pelaku) : ''} style={{ minHeight: 36 }}><option value="">Semua</option>{(actors.ok ? actors.data : []).map((item) => <option key={item.userId} value={item.userId}>{item.label}</option>)}</select></label>
@@ -145,6 +142,6 @@ async function AuditPage({ actorId, query }: { actorId: Awaited<ReturnType<typeo
         <Typography variant="caption">Halaman {page} dari {pages}</Typography>
         {page < pages ? <Link href={link(page + 1)} aria-label="Halaman berikutnya">Berikutnya ›</Link> : null}
       </Box>
-    </Paper>
+    </Card>
   );
 }
