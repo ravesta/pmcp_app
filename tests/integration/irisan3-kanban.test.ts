@@ -203,7 +203,9 @@ describe.skipIf(!isPg)('revisi estimasi otomatis (FR-13-05)', () => {
     const snap = await snapshotOf(world, projectId);
     expect(snap.stages[0]?.revisionCount).toBe(1);
     expect(['2026-11-12']).toContain(snap.stages[0]?.estimate?.end); // yang terpanjang menang (estimasi tidak mengecil)
-    expect(await container.prisma.card.count({ where: { project_id: BigInt(projectId), extends_stage: true } })).toBe(2);
+    // urutan commit bebas: kartu yang berakhir lebih awal hanya ditandai bila tahapan sudah diperpanjang lebih dulu
+    const flagged = await container.prisma.card.count({ where: { project_id: BigInt(projectId), extends_stage: true } });
+    expect([1, 2]).toContain(flagged);
   });
 
   it('tahapan tanpa estimasi: rencana dapat dijadikan estimasi awal bila dipilih', async () => {

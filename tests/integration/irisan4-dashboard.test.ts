@@ -129,10 +129,10 @@ describe.skipIf(!isPg)('Dashboard PIC', () => {
     const target = await makeProject(world, { info: { name: 'D Aktivitas' }, stages: baFor('2026-10-20', '2026-11-20') });
     const mk = async (title: string, column: string, start: string, end: string) =>
       unwrap(await createProjectCard(container.kanban, world.rina, { projectId: target.projectId, categoryId: null, stepName: '', title, planStart: start, planEnd: end, estimateHours: '', isAdhoc: false, column, confirmStart: '', revisionCategoryId: null, revisionNote: '', adoptPlan: false }));
-    await mk('A1', 'PLANNED', '2026-10-29', '2026-10-30');
-    await mk('A2', 'PLANNED', '2026-10-29', '2026-10-30');
-    await mk('A3', 'IN_PROGRESS', '2026-10-20', '2026-10-26');
-    const done = await mk('A4', 'IN_PROGRESS', '2026-10-28', '2026-10-28');
+    await mk('Kartu A1', 'PLANNED', '2026-10-29', '2026-10-30');
+    await mk('Kartu A2', 'PLANNED', '2026-10-29', '2026-10-30');
+    await mk('Kartu A3', 'IN_PROGRESS', '2026-10-20', '2026-10-26');
+    const done = await mk('Kartu A4', 'IN_PROGRESS', '2026-10-28', '2026-10-28');
     const version = unwrap(await getCardDetail(container.kanban, world.rina, done.cardId)).card.version;
     unwrap(await moveCard(container.kanban, world.rina, { cardId: done.cardId, expectedVersion: version, target: 'DONE' }));
     const dash = await getPicDashboard(container.dashboard, world.rina, { mode: 'WEEK', offset: 0 });
@@ -144,7 +144,7 @@ describe.skipIf(!isPg)('Dashboard PIC', () => {
 describe.skipIf(!isPg)('Riwayat', () => {
   it('tahapan selesai: hanya milik PIC, filter periode, output dan jam; Manager memilih PIC', async () => {
     const proj = await makeProject(world, { info: { name: 'H Selesai' }, stages: baFor('2026-09-01', '2026-09-30') });
-    const card = unwrap(await createProjectCard(container.kanban, world.rina, { projectId: proj.projectId, categoryId: null, stepName: '', title: 'Output BRD', planStart: '2026-10-26', planEnd: '2026-10-28', estimateHours: '2', isAdhoc: false, column: 'IN_PROGRESS', confirmStart: '', revisionCategoryId: null, revisionNote: '', adoptPlan: false, ...{} }));
+    const card = unwrap(await createProjectCard(container.kanban, world.rina, { projectId: proj.projectId, categoryId: null, stepName: '', title: 'Output BRD', planStart: '2026-09-10', planEnd: '2026-09-11', estimateHours: '2', isAdhoc: false, column: 'IN_PROGRESS', confirmStart: '', revisionCategoryId: null, revisionNote: '', adoptPlan: false }));
     unwrap(await addWorkLog(container.kanban, world.rina, { cardId: card.cardId, date: '2026-10-27', start: '09:00', end: '10:30', stepName: '', description: 'Menulis' }).then((r) => (r.ok ? r : { ok: true as const, data: null })));
     const version = unwrap(await getCardDetail(container.kanban, world.rina, card.cardId)).card.version;
     unwrap(await moveCard(container.kanban, world.rina, { cardId: card.cardId, expectedVersion: version, target: 'DONE' }));
