@@ -9,3 +9,4 @@ coverage/
 next-env.d.ts
 tsconfig.tsbuildinfo
 src/generated/
+test-results/

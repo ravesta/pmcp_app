@@ -22,6 +22,12 @@ Node di server lokal. Rincian dan alasan: Technology Baseline v1.0.
 | `npm test` | seluruh uji (unit, arsitektur, konvensi kode, migrasi database) |
 | `npm run test:unit` / `npm run test:integration` | sebagian uji |
 | `npm run build` | build produksi (artefak `standalone`) |
+| `npm run test:e2e` | uji E2E di browser nyata: membuat database sementara, build, `next start`, lalu skenario `tests/e2e/*.e2e.mjs` (±2 menit) |
+
+Uji E2E memerlukan PostgreSQL sungguhan (`DATABASE_URL` menunjuk servernya; database `pmcp_e2e_*` dibuat dan dihapus
+otomatis) dan Chromium. Bila Chromium bawaan Playwright tidak terpasang, isi `E2E_CHROMIUM_PATH`. Opsi: `--skip-build`,
+`--keep` (jangan hapus database), dan nama berkas sebagai penyaring (mis. `npm run test:e2e -- 03-`). Tangkapan layar
+kegagalan masuk ke `test-results/e2e`.
 
 Uji integrasi skema memakai PGlite (PostgreSQL dalam WASM) agar berjalan tanpa Docker. Pipeline CI/CD
 wajib menjalankan uji yang sama pada PostgreSQL sungguhan.

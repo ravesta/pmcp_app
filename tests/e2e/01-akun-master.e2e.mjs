@@ -7,7 +7,7 @@
  * Efek samping: membuat data uji (aplikasi "Uji E2E", PIC "Rina E2E") dan mengganti password akun Manager uji.
  * Rujukan: FSD FR-01-01 s.d. FR-01-05, FR-08-01, FR-08-02, FR-19-01, FR-09-01; Technical Design §14 (E2E).
  */
-import { chromium } from 'playwright-core';
+import { launchBrowser } from './_support.mjs';
 
 const BASE = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:3130';
 const TEMP = process.env.E2E_MANAGER_TEMP;
@@ -48,7 +48,15 @@ async function signIn(page, username, password) {
   await page.getByRole('button', { name: 'Masuk' }).click();
 }
 
-const browser = await chromium.launch({ channel: 'msedge', headless: true });
+/**
+ * Menemukan tautan sub menu Master (deretan tombol pil) menurut nama persisnya.
+ * Masukan: halaman dan nama sub menu. Keluaran: locator tautan.
+ * Efek samping: tidak ada.
+ * Rujukan: FR-08-06, BL-47.
+ */
+const masterMenu = (page, name) => page.getByRole('navigation', { name: 'Data master' }).getByRole('link', { name, exact: true });
+
+const browser = await launchBrowser();
 try {
   const context = await browser.newContext({ viewport: { width: 1150, height: 820 } });
   const page = await context.newPage();
@@ -107,23 +115,23 @@ try {
   await page.screenshot({ path: `${SHOTS}/e2e_04_master_aplikasi.png` });
 
   // 5. kategori bawaan terkunci, dan sub menu lain
-  await page.getByRole('tab', { name: 'Kategori Alasan Revisi' }).click();
+  await masterMenu(page, 'Kategori Alasan Revisi').click();
   await page.waitForURL('**/master/kategori-revisi');
   await page.getByText('Terlambat dari estimasi').waitFor();
   check('kategori bawaan sistem diberi penanda dan tanpa tombol ubah', (await page.getByText('Bawaan sistem').count()) === 2);
-  await page.getByRole('tab', { name: 'Step Tahapan' }).click();
+  await masterMenu(page, 'Step Tahapan').click();
   await page.waitForURL('**/master/step');
   await page.getByText('Intake & Asesmen Awal').waitFor();
   check('Step Tahapan memuat 9 step BA', (await page.locator('tbody tr').count()) === 9);
 
   // 6. Master PIC: tambah dengan akun, password sementara tampil sekali
-  await page.getByRole('tab', { name: 'PIC' }).click();
+  await masterMenu(page, 'PIC').click();
   await page.waitForURL('**/master/pic');
   await page.getByRole('button', { name: '+ Tambah PIC' }).click();
   await page.getByLabel('Nama').fill('Rina E2E');
   await page.getByRole('combobox', { name: /Tahapan/ }).click();
   await page.getByRole('option', { name: 'Development' }).click();
-  await page.getByText('PIC Development dicatat sebagai nama saja').waitFor();
+  await page.getByText('PIC Development dicatat sebagai nama saja').first().waitFor();
   check('memilih Development otomatis meniadakan akun login', (await page.getByLabel('Ya, buatkan akun').isDisabled()));
   await page.getByRole('combobox', { name: /Tahapan/ }).click();
   await page.getByRole('option', { name: 'Business Analyst' }).click();
@@ -145,7 +153,7 @@ try {
   await page.screenshot({ path: `${SHOTS}/e2e_06_master_pic.png` });
 
   // 7. jejak perubahan memuat peristiwa tanpa password
-  await page.getByRole('tab', { name: 'Jejak Perubahan' }).click();
+  await masterMenu(page, 'Jejak Perubahan').click();
   await page.waitForURL('**/master/jejak');
   await page.getByText(/PIC "Rina E2E"/).first().waitFor();
   const audit = await bodyText(page);
@@ -172,7 +180,7 @@ try {
   check('PIC tidak melihat menu Master', (await page.getByRole('tab', { name: 'Master' }).count()) === 0);
   await page.goto(`${BASE}/master/pic`);
   await page.getByText('Anda tidak memiliki akses ke halaman ini.').waitFor();
-  check('PIC membuka /master/pic langsung: akses ditolak dan data master tidak tampil', !(await bodyText(page)).includes('Rina E2E'));
+  check('PIC membuka /master/pic langsung: akses ditolak dan data master tidak tampil', (await page.getByRole('button', { name: '+ Tambah PIC' }).count()) === 0 && (await page.locator('tbody tr').count()) === 0);
   await page.screenshot({ path: `${SHOTS}/e2e_08_pic_ditolak.png` });
   await page.goto(`${BASE}/master/jejak`);
   await page.getByText('Anda tidak memiliki akses ke halaman ini.').waitFor();
