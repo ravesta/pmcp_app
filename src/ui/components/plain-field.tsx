@@ -88,6 +88,8 @@ interface PlainCheckboxProps {
   readonly label: string;
   readonly value?: string;
   readonly defaultChecked?: boolean;
+  /** True bila berdiri sendiri pada barisnya (tanpa ruang label kosong di atasnya). */
+  readonly inline?: boolean;
 }
 
 /**
@@ -96,13 +98,17 @@ interface PlainCheckboxProps {
  * Efek samping: tidak ada (komponen murni).
  * Rujukan: Screen [010] field 9 ("Hanya milik saya"), mockup v0.2 (kelas ck).
  */
-export function PlainCheckbox({ name, label, value = '1', defaultChecked }: PlainCheckboxProps) {
+export function PlainCheckbox({ name, label, value = '1', defaultChecked, inline = false }: PlainCheckboxProps) {
+  const box = (
+    <label className={styles.ck}>
+      <input type="checkbox" name={name} value={value} defaultChecked={defaultChecked} /> {label}
+    </label>
+  );
+  if (inline) return <div className={styles.inlineCk}>{box}</div>;
   return (
     <div className={styles.field}>
       <span className={styles.label} aria-hidden>&nbsp;</span>
-      <label className={styles.ck}>
-        <input type="checkbox" name={name} value={value} defaultChecked={defaultChecked} /> {label}
-      </label>
+      {box}
     </div>
   );
 }

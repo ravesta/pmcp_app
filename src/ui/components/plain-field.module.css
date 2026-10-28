@@ -6,3 +6,4 @@
 .ck { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); cursor: pointer; min-height: 32px; line-height: 1.2; }
 .ck:has(input:checked) { border-color: var(--accent); background: var(--run-bg); }
 .ck input { margin: 0; }
+.inlineCk { display: flex; }
