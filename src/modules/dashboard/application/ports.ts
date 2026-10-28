@@ -9,11 +9,13 @@ import type { DateRange } from '@/shared/calendar';
 import type { Clock } from '@/shared/clock';
 import type { IsoDate } from '@/shared/iso-date';
 
-/** PIC aktif dengan akun login (BA atau QA). */
+/** PIC dengan akun login (BA atau QA), aktif maupun nonaktif. */
 export interface LoginPic {
   readonly id: number;
   readonly name: string;
   readonly stage: StageKind;
+  /** PIC nonaktif tetap ada agar kartu dan jam periode lalu tetap terhitung (EC-08-01.05). */
+  readonly isActive: boolean;
 }
 
 /** Kartu ringkas untuk hitungan dashboard (tidak dibatalkan). */
@@ -80,7 +82,7 @@ export interface DoneStageDetail {
 
 /** Akses baca khusus dashboard dan riwayat. */
 export interface DashboardReadRepository {
-  /** PIC aktif dengan akun login, terurut nama. */
+  /** PIC ber-login (aktif dan nonaktif), terurut nama. */
   listLoginPics(): Promise<LoginPic[]>;
   /** Kartu tidak dibatalkan yang rencananya beririsan dengan periode. */
   listCardsOverlapping(range: DateRange): Promise<DashCard[]>;

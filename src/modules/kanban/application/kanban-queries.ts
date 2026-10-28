@@ -56,7 +56,7 @@ export interface BoardView {
   readonly totals: Readonly<Record<CardColumn, number>>;
   readonly columnLimit: number;
   readonly cancelled: ReadonlyArray<CardView>;
-  readonly pics: ReadonlyArray<{ id: number; name: string; stage: StageKind }>;
+  readonly pics: ReadonlyArray<{ id: number; name: string; stage: StageKind; isActive: boolean }>;
   /** True bila pelaku PIC (dapat membuat kartu). */
   readonly canCreate: boolean;
 }

@@ -48,7 +48,7 @@ export function DailyActivity({ result, params, isManager, today, hrefWith, prev
         <input type="hidden" name="tab" value="harian" />
         {params.mode === 'WEEK' ? <input type="hidden" name="mode" value="minggu" /> : null}
         <DateField name="tanggal" label="Ke tanggal" defaultValue={params.date ?? today} />
-        {isManager ? <PlainSelect id="harian-pic" name="pic" label="PIC" emptyLabel={null} defaultValue={result.pic ? String(result.pic.id) : ''} options={result.pics.map((pic) => ({ value: String(pic.id), label: `${pic.name} (${pic.stage})` }))} /> : null}
+        {isManager ? <PlainSelect id="harian-pic" name="pic" label="PIC" emptyLabel={null} defaultValue={result.pic ? String(result.pic.id) : ''} options={result.pics.map((pic) => ({ value: String(pic.id), label: `${pic.name} (${pic.stage})${pic.isActive ? '' : ' - nonaktif'}` }))} /> : null}
         <Button type="submit" variant="outlined" size="small">Tampilkan</Button>
       </Box>
       <div className={styles.row} role="status">

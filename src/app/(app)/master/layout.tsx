@@ -3,6 +3,7 @@ import Box from '@mui/material/Box';
 import type { ReactNode } from 'react';
 import { can } from '@/modules/auth';
 import { Card, CardHeader } from '@/ui/components/card';
+import { recordDenied } from '../../_lib/denied-access';
 import { requirePageSession } from '../../_lib/session';
 import { MasterNav } from './master-nav';
 
@@ -15,6 +16,7 @@ import { MasterNav } from './master-nav';
 export default async function MasterLayout({ children }: { children: ReactNode }) {
   const { actor } = await requirePageSession();
   if (!can(actor, 'master.manage')) {
+    await recordDenied(actor, 'membuka menu Master');
     return <Alert severity="error" role="alert">Anda tidak memiliki akses ke halaman ini.</Alert>;
   }
   return (

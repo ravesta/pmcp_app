@@ -42,11 +42,13 @@ export default async function KanbanPage({ searchParams }: { searchParams: Promi
 
   const total = COLUMN_ORDER.reduce((sum, column) => sum + board.totals[column], 0);
   const closeHref = kanbanHref(raw, { kartu: null, buat: null, dibuat: null });
+  const invalidRange = params.board.period === 'RANGE' && (!params.board.from || !params.board.to || params.board.to < params.board.from);
   const isPic = actor.role === 'PIC';
   const selectedPic = params.board.picId === null ? null : board.pics.find((pic) => pic.id === params.board.picId);
 
   return (
     <>
+      {invalidRange ? <Alert severity="warning" role="status">Rentang tanggal tidak valid; papan memakai Minggu ini. Isi "Dari" dan "Sampai" dengan tanggal yang benar (dd/mm/yyyy).</Alert> : null}
       {params.createdCode ? <Alert severity="success" role="status">Kartu {params.createdCode} berhasil dibuat.</Alert> : null}
       <Card>
         <CardHeader

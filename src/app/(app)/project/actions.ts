@@ -17,6 +17,7 @@ import { MESSAGES } from '@/platform/messages';
 import { nextStamp, type ActionState } from '../../_lib/action-state';
 import { formInteger, formIntegers, formText, toActionState } from '../../_lib/form-data';
 import { requirePageSession } from '../../_lib/session';
+import { audited } from '../../_lib/denied-access';
 
 /** Status tahapan yang diterima dari formulir (divalidasi, bukan dipercaya). */
 const STAGE_STATUSES: ReadonlyArray<StageStatus> = ['NOT_STARTED', 'RUNNING', 'HELD', 'DONE'];
@@ -60,12 +61,12 @@ function readStagePlan(formData: FormData, kind: StageKind) {
  */
 export async function createProjectAction(_previous: ActionState, formData: FormData): Promise<ActionState> {
   const { actor } = await requirePageSession();
-  const result = await createProject(getContainer().project, actor, {
+  const result = await audited(actor, 'createProject', createProject(getContainer().project, actor, {
     info: readProjectInfo(formData),
     status: formText(formData, 'status'),
     statusReason: formText(formData, 'statusReason'),
     stages: Object.fromEntries(STAGE_ORDER.map((kind) => [kind, readStagePlan(formData, kind)])),
-  });
+  }));
   if (!result.ok) return toActionState(result, '');
   revalidatePath('/project', 'layout');
   redirect(`/project?v=daftar&dibuat=${encodeURIComponent(result.data.code)}&lengkap=${result.data.planningComplete ? '1' : '0'}`);
@@ -82,13 +83,13 @@ export async function updateProjectInfoAction(_previous: ActionState, formData: 
   const projectId = formInteger(formData, 'projectId');
   const expectedVersion = formInteger(formData, 'expectedVersion');
   if (projectId === null || expectedVersion === null) return { ok: false, message: MESSAGES.UNEXPECTED, stamp: nextStamp() };
-  const result = await updateProjectInfo(getContainer().project, actor, {
+  const result = await audited(actor, 'updateProjectInfo', updateProjectInfo(getContainer().project, actor, {
     projectId,
     expectedVersion,
     info: readProjectInfo(formData),
     status: formText(formData, 'status'),
     statusReason: formText(formData, 'statusReason'),
-  });
+  }));
   revalidatePath('/project', 'layout');
   return toActionState(result, 'Perubahan disimpan.');
 }
@@ -166,7 +167,7 @@ export async function updateStageAction(_previous: ActionState, formData: FormDa
   const read = readStageParts(formData);
   if ('error' in read) return read.error;
 
-  const result = await updateStage(getContainer().project, actor, { stageId, expectedVersion, ...read.parts });
+  const result = await audited(actor, 'updateStage', updateStage(getContainer().project, actor, { stageId, expectedVersion, ...read.parts }));
   revalidatePath('/project', 'layout');
   if (!result.ok) return toActionState(result, '');
   const notes: string[] = [];

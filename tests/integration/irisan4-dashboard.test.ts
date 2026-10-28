@@ -96,6 +96,23 @@ describe.skipIf(!isPg)('Dashboard Head', () => {
   });
 });
 
+describe.skipIf(!isPg)('PIC nonaktif (EC-08-01.05)', () => {
+  it('kartu dan jam PIC nonaktif tetap terhitung pada kapasitas dan kepatuhan, tetapi tidak dihitung sebagai PIC aktif', async () => {
+    const sari = world.sari.picId as number;
+    await container.prisma.pic.update({ where: { id: BigInt(sari) }, data: { is_active: false } });
+    try {
+      const head = await getHeadDashboard(container.dashboard, world.manager, { mode: 'WEEK', offset: 0 });
+      expect(head.capacity.rows.find((row) => row.pic.name === 'Sari')).toMatchObject({ pic: { isActive: false }, capacity: { status: 'OVER' } });
+      expect(head.roles[0]?.picCount).toBe(1); // hanya PIC BA aktif (Rina)
+      const { getCompliance } = await import('@/modules/kanban');
+      const view = await getCompliance(container.kanban, { period: 'THIS_WEEK', from: null, to: null });
+      expect(view.rows.map((row) => row.name)).toContain('Sari');
+    } finally {
+      await container.prisma.pic.update({ where: { id: BigInt(sari) }, data: { is_active: true } });
+    }
+  });
+});
+
 describe.skipIf(!isPg)('Dashboard PIC', () => {
   it('Assignment baru hilang setelah detail dibuka dan berpindah ke Pekerjaan aktif', async () => {
     let dash = await getPicDashboard(container.dashboard, world.rina, { mode: 'WEEK', offset: 0 });

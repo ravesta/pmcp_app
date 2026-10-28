@@ -41,10 +41,10 @@ export function createPrismaKanbanReference(prisma: PrismaClient): KanbanReferen
       return row?.int_value ?? 3;
     },
 
-    /** PIC aktif terurut nama. Efek samping: tidak ada (hanya baca). */
+    /** Seluruh PIC terurut nama. Efek samping: tidak ada (hanya baca). */
     async listPics() {
-      const rows = await prisma.pic.findMany({ where: { is_active: true }, orderBy: { name: 'asc' } });
-      return rows.map((row) => ({ id: Number(row.id), name: row.name, stage: row.stage as StageKind }));
+      const rows = await prisma.pic.findMany({ orderBy: { name: 'asc' } });
+      return rows.map((row) => ({ id: Number(row.id), name: row.name, stage: row.stage as StageKind, isActive: row.is_active }));
     },
   };
 }

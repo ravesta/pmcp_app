@@ -16,6 +16,8 @@ interface GanttChartProps {
   readonly projects: ReadonlyArray<ProjectView>;
   readonly timeline: Timeline;
   readonly showLayers: boolean;
+  /** PIC yang dipilih pada filter: tahapan miliknya disorot, tahapan PIC lain tetap tampil (FR-12-03 butir 1). */
+  readonly highlightPicId?: number;
   /** Pesan bila tidak ada project pada periode dan filter ini. */
   readonly emptyMessage?: string;
 }
@@ -50,7 +52,7 @@ function trackStyle(timeline: Timeline, startWeekday: number): CSSProperties {
  * Efek samping: tidak ada (komponen murni; nama project dan bar berupa tautan ke Detail Project).
  * Rujukan: FR-12-01, FR-12-02, FR-12-03, BL-17, handoff UX/UI §8 (kolom nama tetap) dan §9, mockup v0.2 (ganttHtml).
  */
-export function GanttChart({ projects, timeline, showLayers, emptyMessage = 'Tidak ada tahapan pada periode dan filter ini.' }: GanttChartProps) {
+export function GanttChart({ projects, timeline, showLayers, highlightPicId, emptyMessage = 'Tidak ada tahapan pada periode dan filter ini.' }: GanttChartProps) {
   if (projects.length === 0) return <div className={styles.empty}>{emptyMessage}</div>;
   const startWeekday = dayOfWeek(timeline.start);
   const track = trackStyle(timeline, startWeekday);
@@ -81,7 +83,7 @@ export function GanttChart({ projects, timeline, showLayers, emptyMessage = 'Tid
               <div key={stage.stageId} className={styles.gr}>
                 <div className={styles.gl}>{STAGE_FULL_TEXT[stage.kind]}</div>
                 <div className={styles.gc} style={{ ...track, height: stage.bar ? ROW_HEIGHT : EMPTY_ROW_HEIGHT }}>
-                  <GanttStageBar projectCode={project.code} projectName={project.name} stage={stage} timeline={timeline} showLayers={showLayers} />
+                  <GanttStageBar projectCode={project.code} projectName={project.name} stage={stage} timeline={timeline} showLayers={showLayers} highlightPicId={highlightPicId} />
                   {today}
                 </div>
               </div>

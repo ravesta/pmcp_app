@@ -19,6 +19,7 @@ import { MESSAGES } from '@/platform/messages';
 import { nextStamp, type ActionState } from '../../_lib/action-state';
 import { formText as text, toActionState as toState } from '../../_lib/form-data';
 import { requirePageSession } from '../../_lib/session';
+import { audited } from '../../_lib/denied-access';
 
 /** Jenis master yang diterima dari formulir (divalidasi, bukan dipercaya). */
 const KINDS: ReadonlyArray<MasterKind> = ['application', 'revision_category', 'activity_category', 'reschedule_reason', 'stage_step'];
@@ -41,16 +42,16 @@ export async function masterAction(_previous: ActionState, formData: FormData): 
   let state: ActionState;
   switch (text(formData, 'intent')) {
     case 'add':
-      state = toState(await addMasterItem(deps, actor, { kind, name: text(formData, 'name'), stage }), 'Ditambahkan.');
+      state = toState(await audited(actor, 'addMasterItem', addMasterItem(deps, actor, { kind, name: text(formData, 'name'), stage })), 'Ditambahkan.');
       break;
     case 'rename':
-      state = toState(await renameMasterItem(deps, actor, { kind, id, name: text(formData, 'name') }), 'Nama disimpan.');
+      state = toState(await audited(actor, 'renameMasterItem', renameMasterItem(deps, actor, { kind, id, name: text(formData, 'name') })), 'Nama disimpan.');
       break;
     case 'toggle':
-      state = toState(await setMasterItemActive(deps, actor, { kind, id, active: text(formData, 'active') === 'true' }), 'Status disimpan.');
+      state = toState(await audited(actor, 'setMasterItemActive', setMasterItemActive(deps, actor, { kind, id, active: text(formData, 'active') === 'true' })), 'Status disimpan.');
       break;
     case 'move':
-      state = toState(await moveStep(deps, actor, { id, direction: text(formData, 'direction') === 'up' ? 'up' : 'down' }), 'Urutan disimpan.');
+      state = toState(await audited(actor, 'moveStep', moveStep(deps, actor, { id, direction: text(formData, 'direction') === 'up' ? 'up' : 'down' })), 'Urutan disimpan.');
       break;
     default:
       state = { ok: false, message: MESSAGES.UNEXPECTED, stamp: nextStamp() };
@@ -69,7 +70,7 @@ export async function thresholdAction(_previous: ActionState, formData: FormData
   const { actor } = await requirePageSession();
   const key = text(formData, 'key');
   if (key !== 'revision_warn_threshold' && key !== 'reschedule_warn_threshold') return { ok: false, message: MESSAGES.UNEXPECTED, stamp: nextStamp() };
-  const state = toState(await setThreshold(getContainer().master, actor, { key: key as ThresholdKey, value: Number(text(formData, 'value')) }), 'Batas disimpan.');
+  const state = toState(await audited(actor, 'setThreshold', setThreshold(getContainer().master, actor, { key: key as ThresholdKey, value: Number(text(formData, 'value')) })), 'Batas disimpan.');
   revalidatePath('/master', 'layout');
   return state;
 }
@@ -89,23 +90,23 @@ export async function picAction(_previous: ActionState, formData: FormData): Pro
   let state: ActionState;
   switch (text(formData, 'intent')) {
     case 'create': {
-      const result = await createPic(deps, actor, {
+      const result = await audited(actor, 'createPic', createPic(deps, actor, {
         name: text(formData, 'name'),
         stage: text(formData, 'stage'),
         withLogin: text(formData, 'login') === 'ya',
         username: text(formData, 'username'),
-      });
+      }));
       state = toState(result, 'PIC ditambahkan.', result.ok ? { kind: 'created', ...result.data, name: text(formData, 'name').trim() } : undefined);
       break;
     }
     case 'rename':
-      state = toState(await renamePic(deps, actor, { picId, name: text(formData, 'name') }), 'Nama disimpan.');
+      state = toState(await audited(actor, 'renamePic', renamePic(deps, actor, { picId, name: text(formData, 'name') })), 'Nama disimpan.');
       break;
     case 'toggle':
-      state = toState(await setPicActive(deps, actor, { picId, active: text(formData, 'active') === 'true', confirmed: text(formData, 'confirmed') === 'true' }), 'Status disimpan.');
+      state = toState(await audited(actor, 'setPicActive', setPicActive(deps, actor, { picId, active: text(formData, 'active') === 'true', confirmed: text(formData, 'confirmed') === 'true' })), 'Status disimpan.');
       break;
     case 'reset': {
-      const result = await resetPicPassword(deps, actor, { picId });
+      const result = await audited(actor, 'resetPicPassword', resetPicPassword(deps, actor, { picId }));
       state = toState(result, 'Password direset.', result.ok ? { kind: 'reset', ...result.data } : undefined);
       break;
     }

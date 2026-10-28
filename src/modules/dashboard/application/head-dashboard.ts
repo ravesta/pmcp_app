@@ -196,11 +196,12 @@ export async function getHeadDashboard(deps: DashboardDeps, actor: Actor, input:
 
   const roles: RoleSummary[] = (['BA', 'QA'] as const).map((role) => {
     const ids = new Set(pics.filter((pic) => pic.stage === role).map((pic) => pic.id));
+    const activeCount = pics.filter((pic) => pic.stage === role && pic.isActive).length;
     const cards = weekCards.filter((card) => ids.has(card.picId));
     const roleStages = stages.filter(({ stage }) => stage.kind === role);
     return {
       role,
-      picCount: ids.size,
+      picCount: activeCount,
       running: roleStages.filter(({ project, stage }) => project.status === 'RUNNING' && stage.status === 'RUNNING').length,
       notStarted: roleStages.filter(({ stage }) => stage.status === 'NOT_STARTED').length,
       planned: cards.filter((card) => card.column === 'PLANNED').length,
@@ -222,9 +223,9 @@ export async function getHeadDashboard(deps: DashboardDeps, actor: Actor, input:
     },
     risks: { rows: risks.slice(0, RISK_LIMIT), total: risks.length },
     due,
-    capacity: { mode: input.mode, offset: input.offset, range, rows: pics.map((pic) => ({ pic, capacity: capacityFor(rangeCards, rangeLogs, pic.id, range, input.mode).summary })) },
+    capacity: { mode: input.mode, offset: input.offset, range, rows: pics.map((pic) => ({ pic, capacity: capacityFor(rangeCards, rangeLogs, pic.id, range, input.mode).summary })).filter((row) => row.pic.isActive || row.capacity.plannedMinutes > 0 || row.capacity.actualMinutes > 0) },
     roles,
-    quality: pics.map((pic) => {
+    quality: pics.filter((pic) => pic.isActive || (weekLogs.get(pic.id) ?? 0) > 0).map((pic) => {
       const minutes = weekLogs.get(pic.id) ?? 0;
       const rating = weeklyLogQuality(minutes, today);
       return { picId: pic.id, name: pic.name, weekMinutes: minutes, percent: rating.percent, quality: rating.quality, staleCards: staleByPic.get(pic.id) ?? 0, compliance: compliance.rows.find((row) => row.picId === pic.id)?.percent ?? null };

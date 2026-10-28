@@ -110,7 +110,7 @@ describe.skipIf(!isPg)('membuat kartu', () => {
     const { projectId } = await runningProject('KB Tahap Selesai');
     const snap = await snapshotOf(world, projectId);
     await container.prisma.project_stage.update({ where: { id: BigInt(snap.stages[0]?.id as number) }, data: { status: 'DONE', actual_start: new Date('2026-10-26T00:00:00Z'), actual_end: new Date('2026-10-27T00:00:00Z') } });
-    expect(await createProjectCard(kanban, world.rina, cardInput({ projectId }))).toMatchObject({ ok: false, error: { fields: { project: 'Tahapan ini sudah selesai.' } } });
+    expect(await createProjectCard(kanban, world.rina, cardInput({ projectId }))).toMatchObject({ ok: false, error: { fields: { project: expect.stringContaining('Tahapan ini sudah selesai') } } });
   });
 
   it('project Backlog: jawaban wajib; "Ya" mengubah status menjadi Berjalan dan tercatat; "Biarkan" tidak', async () => {
@@ -442,5 +442,16 @@ describe.skipIf(!isPg)('kepatuhan rencana (FR-21-05)', () => {
     expect(row).toMatchObject({ planned: 3, due: 2, onTime: 1, overdueOpen: 1, notDue: 1, adhoc: 1, percent: 50, stage: 'QA' });
     expect((row?.onTime ?? 0) + (row?.late ?? 0) + (row?.overdueOpen ?? 0) + (row?.notDue ?? 0)).toBe(row?.planned);
     world.clockState.today = '2026-10-28';
+  });
+});
+
+describe.skipIf(!isPg)('akses ditolak dicatat (FR-01-04 butir 4)', () => {
+  it('recordAccessDenied menulis peristiwa Keamanan dan tampil pada saringan Keamanan', async () => {
+    const { recordAccessDenied, listAuditEvents } = await import('@/modules/audit');
+    await recordAccessDenied(container.auditRepository, world.sari, 'memindahkan kartu milik PIC lain');
+    const events = unwrap(await listAuditEvents(container.auditRepository, world.manager, { category: 'SECURITY', page: 1, pageSize: 10 }));
+    const denied = events.rows.find((row) => row.summary.includes('Akses ditolak') && row.summary.includes('Sari'));
+    expect(denied).toBeDefined();
+    expect(denied?.summary).not.toMatch(/password|token/i);
   });
 });

@@ -16,6 +16,7 @@
     "test:integration": "vitest run tests/integration",
     "perf:seed": "node scripts/seed-reference-data.mjs",
     "perf:measure": "node scripts/measure-performance.mjs",
+    "sessions:cleanup": "node scripts/cleanup-sessions.mjs",
     "db:migrate": "node scripts/migrate.mjs",
     "db:migrate:dry": "node scripts/migrate.mjs --dry-run",
     "db:pull": "prisma db pull && prisma generate",

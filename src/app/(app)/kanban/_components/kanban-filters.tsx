@@ -9,7 +9,7 @@ import type { KanbanPageParams } from '../_lib/search-params';
 /** Properti bar filter Kanban. */
 interface KanbanFiltersProps {
   readonly params: KanbanPageParams;
-  readonly pics: ReadonlyArray<{ id: number; name: string; stage: string }>;
+  readonly pics: ReadonlyArray<{ id: number; name: string; stage: string; isActive: boolean }>;
   /** True bila pelaku PIC (pilihan "Saya" tersedia). */
   readonly isPic: boolean;
 }
@@ -29,7 +29,7 @@ export function KanbanFilters({ params, pics, isPic }: KanbanFiltersProps) {
   const picOptions = [
     ...(isPic ? [{ value: 'saya', label: 'Saya' }] : []),
     { value: 'semua', label: 'Semua PIC' },
-    ...pics.map((pic) => ({ value: String(pic.id), label: `${pic.name} (${pic.stage})` })),
+    ...pics.map((pic) => ({ value: String(pic.id), label: `${pic.name} (${pic.stage})${pic.isActive ? '' : ' - nonaktif'}` })),
   ];
   return (
     <Box component="form" method="get" action="/kanban" role="search" aria-label="Filter Kanban" sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, p: '12px 14px', bgcolor: 'var(--soft)', borderRadius: '8px' }}>

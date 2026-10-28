@@ -107,7 +107,7 @@ export async function getDailyActivity(deps: DashboardDeps, actor: Actor, input:
   const date = input.date ?? today;
   const range: DateRange = input.mode === 'DAY' ? { start: date, end: date } : { start: startOfWeek(date), end: addDays(startOfWeek(date), 6) };
   const pics = actor.role === 'MANAGER' ? await deps.reads.listLoginPics() : [];
-  const picId = actor.role === 'PIC' ? actor.picId : (input.picId ?? pics[0]?.id ?? null);
+  const picId = actor.role === 'PIC' ? actor.picId : (input.picId ?? pics.find((pic) => pic.isActive)?.id ?? pics[0]?.id ?? null);
   const logs = picId === null ? [] : await deps.reads.listLogs(picId, range);
 
   const days: DailyActivityDay[] = [];

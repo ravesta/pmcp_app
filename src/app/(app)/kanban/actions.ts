@@ -20,6 +20,7 @@ import { isIsoDate } from '@/shared/iso-date';
 import { nextStamp, type ActionState } from '../../_lib/action-state';
 import { formInteger, formText, toActionState } from '../../_lib/form-data';
 import { requirePageSession } from '../../_lib/session';
+import { audited } from '../../_lib/denied-access';
 
 /**
  * Menyegarkan halaman yang menampilkan kartu atau estimasi tahapan setelah perubahan.
@@ -82,7 +83,7 @@ export async function createCardAction(_previous: ActionState, formData: FormDat
   const { actor } = await requirePageSession();
   const input = readCardInput(formData);
   const deps = getContainer().kanban;
-  const result = formText(formData, 'kind') === 'ACTIVITY' ? await createActivityCard(deps, actor, input) : await createProjectCard(deps, actor, input);
+  const result = formText(formData, 'kind') === 'ACTIVITY' ? await audited(actor, 'createActivityCard', createActivityCard(deps, actor, input)) : await audited(actor, 'createProjectCard', createProjectCard(deps, actor, input));
   if (!result.ok) return toActionState(result, '');
   refreshPages();
   const base = new URLSearchParams(safeReturnTo(formText(formData, 'returnTo')).split('?')[1] ?? '');
@@ -128,11 +129,11 @@ export async function previewCardPlanAction(projectId: number, planStart: string
  */
 export async function moveCardAction(_previous: ActionState, formData: FormData): Promise<ActionState> {
   const { actor } = await requirePageSession();
-  const result = await moveCard(getContainer().kanban, actor, {
+  const result = await audited(actor, 'moveCard', moveCard(getContainer().kanban, actor, {
     cardId: formInteger(formData, 'cardId') ?? 0,
     expectedVersion: formInteger(formData, 'expectedVersion') ?? 0,
     target: formText(formData, 'target'),
-  });
+  }));
   refreshPages();
   return toActionState(result, 'Kartu dipindahkan.');
 }
@@ -145,11 +146,11 @@ export async function moveCardAction(_previous: ActionState, formData: FormData)
  */
 export async function setProgressAction(_previous: ActionState, formData: FormData): Promise<ActionState> {
   const { actor } = await requirePageSession();
-  const result = await setCardProgress(getContainer().kanban, actor, {
+  const result = await audited(actor, 'setCardProgress', setCardProgress(getContainer().kanban, actor, {
     cardId: formInteger(formData, 'cardId') ?? 0,
     expectedVersion: formInteger(formData, 'expectedVersion') ?? 0,
     value: formInteger(formData, 'value') ?? -1,
-  });
+  }));
   refreshPages();
   return toActionState(result, 'Progres disimpan.');
 }
@@ -163,7 +164,7 @@ export async function setProgressAction(_previous: ActionState, formData: FormDa
  */
 export async function rescheduleAction(_previous: ActionState, formData: FormData): Promise<ActionState> {
   const { actor } = await requirePageSession();
-  const result = await rescheduleCard(getContainer().kanban, actor, {
+  const result = await audited(actor, 'rescheduleCard', rescheduleCard(getContainer().kanban, actor, {
     cardId: formInteger(formData, 'cardId') ?? 0,
     expectedVersion: formInteger(formData, 'expectedVersion') ?? 0,
     planStart: formText(formData, 'planStart'),
@@ -172,7 +173,7 @@ export async function rescheduleAction(_previous: ActionState, formData: FormDat
     note: formText(formData, 'note'),
     revisionCategoryId: formInteger(formData, 'revisionCategoryId'),
     revisionNote: formText(formData, 'revisionNote'),
-  });
+  }));
   if (!result.ok) return toActionState(result, '');
   refreshPages();
   const parts = ['Rencana dijadwal ulang dan dicatat.'];
@@ -189,11 +190,11 @@ export async function rescheduleAction(_previous: ActionState, formData: FormDat
  */
 export async function cancelCardAction(_previous: ActionState, formData: FormData): Promise<ActionState> {
   const { actor } = await requirePageSession();
-  const result = await cancelCard(getContainer().kanban, actor, {
+  const result = await audited(actor, 'cancelCard', cancelCard(getContainer().kanban, actor, {
     cardId: formInteger(formData, 'cardId') ?? 0,
     expectedVersion: formInteger(formData, 'expectedVersion') ?? 0,
     reason: formText(formData, 'reason'),
-  });
+  }));
   refreshPages();
   return toActionState(result, 'Kartu dibatalkan.');
 }
@@ -206,14 +207,14 @@ export async function cancelCardAction(_previous: ActionState, formData: FormDat
  */
 export async function addLogAction(_previous: ActionState, formData: FormData): Promise<ActionState> {
   const { actor } = await requirePageSession();
-  const result = await addWorkLog(getContainer().kanban, actor, {
+  const result = await audited(actor, 'addWorkLog', addWorkLog(getContainer().kanban, actor, {
     cardId: formInteger(formData, 'cardId') ?? 0,
     date: formText(formData, 'date'),
     start: formText(formData, 'start'),
     end: formText(formData, 'end'),
     stepName: formText(formData, 'stepName'),
     description: formText(formData, 'description'),
-  });
+  }));
   if (!result.ok) return toActionState(result, '');
   refreshPages();
   return { ok: true, message: result.data.overDay ? dayOverloadMessage(result.data.dayMinutes) : 'Log tersimpan.', stamp: nextStamp() };
@@ -227,7 +228,7 @@ export async function addLogAction(_previous: ActionState, formData: FormData): 
  */
 export async function deleteLogAction(_previous: ActionState, formData: FormData): Promise<ActionState> {
   const { actor } = await requirePageSession();
-  const result = await deleteWorkLog(getContainer().kanban, actor, { logId: formInteger(formData, 'logId') ?? 0 });
+  const result = await audited(actor, 'deleteWorkLog', deleteWorkLog(getContainer().kanban, actor, { logId: formInteger(formData, 'logId') ?? 0 }));
   refreshPages();
   return toActionState(result, 'Log dihapus.');
 }

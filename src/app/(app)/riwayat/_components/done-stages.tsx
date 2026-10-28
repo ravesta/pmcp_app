@@ -34,7 +34,7 @@ export function DoneStages({ result, params, isManager, hrefFor }: DoneStagesPro
         <PlainInput id="riwayat-cari" name="q" label="Cari nama atau ID project" defaultValue={params.q} maxLength={100} />
         <PlainSelect id="riwayat-tahap" name="tahap" label="Tahapan" defaultValue={params.stage ?? ''} emptyLabel="Semua tahapan" options={[{ value: 'BA', label: 'Business Analyst' }, { value: 'DEV', label: 'Development' }, { value: 'QA', label: 'Quality Assurance' }]} />
         <PlainSelect id="riwayat-selesai" name="selesai" label="Selesai pada" emptyLabel="Semua waktu" defaultValue={params.period === 'LAST_30' ? '30' : params.period === 'THIS_MONTH' ? 'bulan' : params.period === 'LAST_90' ? '90' : ''} options={[{ value: '30', label: '30 hari terakhir' }, { value: 'bulan', label: 'Bulan ini' }, { value: '90', label: '90 hari terakhir' }]} />
-        {isManager ? <PlainSelect id="riwayat-pic" name="pic" label="PIC" defaultValue={result.picId === null ? '' : String(result.picId)} emptyLabel="Semua PIC" options={result.pics.map((pic) => ({ value: String(pic.id), label: `${pic.name} (${pic.stage})` }))} /> : null}
+        {isManager ? <PlainSelect id="riwayat-pic" name="pic" label="PIC" defaultValue={result.picId === null ? '' : String(result.picId)} emptyLabel="Semua PIC" options={result.pics.map((pic) => ({ value: String(pic.id), label: `${pic.name} (${pic.stage})${pic.isActive ? '' : ' - nonaktif'}` }))} /> : null}
         <Button type="submit" variant="contained" size="small">Terapkan</Button>
         <LinkButton href="/riwayat?tab=tahapan" size="small">Reset</LinkButton>
       </Box>

@@ -229,8 +229,8 @@ export interface KanbanReference {
   listActiveSteps(stage: StageKind): Promise<MasterChoice[]>;
   /** Batas peringatan jadwal ulang (master, awal 3). */
   getRescheduleWarnThreshold(): Promise<number>;
-  /** Nama PIC aktif beserta tahapannya untuk filter dan tabel kepatuhan. */
-  listPics(): Promise<Array<{ id: number; name: string; stage: StageKind }>>;
+  /** Seluruh PIC (aktif dan nonaktif) beserta tahapannya untuk filter dan tabel kepatuhan; kartu PIC nonaktif tetap tampil (EC-08-01.05). */
+  listPics(): Promise<Array<{ id: number; name: string; stage: StageKind; isActive: boolean }>>;
 }
 
 /** Ketergantungan yang disuntikkan ke use case kanban. */

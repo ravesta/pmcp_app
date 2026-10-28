@@ -18,6 +18,7 @@ interface GanttStageBarProps {
   readonly timeline: Timeline;
   /** Menampilkan lapisan estimasi awal, aktual, dan catatan (FR-12-02 butir 7). */
   readonly showLayers: boolean;
+  readonly highlightPicId?: number;
 }
 
 /**
@@ -123,7 +124,7 @@ function notePosition(endPx: number, leftPx: number, noteWidth: number, trackWid
  * Efek samping: tidak ada (komponen murni; bar berupa tautan ke Detail Project).
  * Rujukan: FR-12-01 butir 1 dan 7, FR-12-02, BL-17, CL-026, CL-027, handoff UX/UI §9, mockup v0.2.
  */
-export function GanttStageBar({ projectCode, projectName, stage, timeline, showLayers }: GanttStageBarProps) {
+export function GanttStageBar({ projectCode, projectName, stage, timeline, showLayers, highlightPicId }: GanttStageBarProps) {
   const bar = stage.bar;
   const canEdit = stage.rights.update || stage.rights.reopen || stage.rights.fillTimeline || stage.rights.editAssignees;
   const href = canEdit ? `/project/${projectCode}?ubah=${stage.kind}` : `/project/${projectCode}#tahap-${stage.kind}`;
@@ -146,7 +147,7 @@ export function GanttStageBar({ projectCode, projectName, stage, timeline, showL
   const done = stage.status === 'DONE';
   const held = stage.status === 'HELD';
   const doneLate = done && (stage.completion?.kind === 'LATE' || stage.completion?.kind === 'PAST_BASELINE');
-  const classes = [styles.gb, styles[stage.kind], bar.lateOutline && !done ? styles.late : '', done ? styles.done : '', doneLate ? styles.dlate : '', stage.isMine ? styles.mine : '', held ? styles.hold : ''].filter(Boolean).join(' ');
+  const classes = [styles.gb, styles[stage.kind], bar.lateOutline && !done ? styles.late : '', done ? styles.done : '', doneLate ? styles.dlate : '', stage.isMine || (highlightPicId !== undefined && stage.assignees.some((a) => a.picId === highlightPicId)) ? styles.mine : '', held ? styles.hold : ''].filter(Boolean).join(' ');
 
   const notes = showLayers ? buildNotes(stage) : [];
   const noteWidth = notes.reduce((total, note) => total + note.text.length * 6.3 + 22, 0);

@@ -43,8 +43,8 @@ export function createPrismaDashboardReads(prisma: PrismaClient): DashboardReadR
   return {
     /** PIC aktif ber-login. Efek samping: tidak ada (hanya baca). */
     async listLoginPics() {
-      const rows = await prisma.pic.findMany({ where: { is_active: true, app_user: { isNot: null }, stage: { in: ['BA', 'QA'] } }, orderBy: { name: 'asc' } });
-      return rows.map((row) => ({ id: Number(row.id), name: row.name, stage: row.stage as StageKind }));
+      const rows = await prisma.pic.findMany({ where: { app_user: { isNot: null }, stage: { in: ['BA', 'QA'] } }, orderBy: { name: 'asc' } });
+      return rows.map((row) => ({ id: Number(row.id), name: row.name, stage: row.stage as StageKind, isActive: row.is_active }));
     },
 
     /** Kartu beririsan periode. Efek samping: tidak ada (hanya baca). */

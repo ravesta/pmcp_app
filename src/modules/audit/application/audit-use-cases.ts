@@ -78,3 +78,20 @@ export async function listProjectHistory(
   const result = await repository.list({ projectCode, page: safePage, pageSize: safeSize });
   return { ...result, page: safePage, pageSize: safeSize };
 }
+
+/**
+ * Mencatat percobaan akses ditolak sebagai peristiwa Keamanan (tanpa isian formulir atau data permintaan).
+ * Masukan: repository, pelaku, dan uraian singkat yang dicoba (mis. "memindahkan kartu"). Keluaran: janji selesai.
+ * Efek samping: INSERT `audit_event` kategori SECURITY, aksi `access.denied`, dalam transaksi kecil sendiri.
+ * Rujukan: FR-01-04 butir 4, FR-09-01 butir 3, EC-16-01.01, NFR-04.
+ */
+export async function recordAccessDenied(repository: AuditRepository, actor: Actor, attempted: string): Promise<void> {
+  await recordAudit(repository, null, {
+    actorUserId: actor.userId,
+    actorLabel: actor.label,
+    category: 'SECURITY',
+    action: 'access.denied',
+    entityType: 'request',
+    summary: `Akses ditolak: ${actor.label} (${actor.role}) mencoba ${attempted}`.slice(0, 300),
+  });
+}
