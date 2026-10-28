@@ -10,14 +10,14 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Kerangka halaman ber-sesi: memastikan ada sesi (dan bukan akun wajib ganti password), lalu menampilkan header
- * dengan menu sesuai peran. Menu hanya memuat layar yang sudah tersedia (Dashboard, Project, Kanban, Master); menu lain ditambahkan pada irisan berikutnya.
+ * dengan menu sesuai peran. Menu hanya memuat layar yang sudah tersedia (Dashboard, Project, Kanban, Riwayat, Master); menu lain ditambahkan pada irisan berikutnya.
  * Masukan: isi halaman. Keluaran: kerangka dengan header.
  * Efek samping: memvalidasi sesi di server pada setiap permintaan (bukan hanya di middleware, TD-10).
  * Rujukan: FR-01-04, Screen [025].
  */
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const { actor } = await requirePageSession();
-  const items: NavItem[] = [{ label: 'Dashboard', href: '/dashboard' }, { label: 'Project', href: '/project' }, { label: 'Kanban', href: '/kanban' }];
+  const items: NavItem[] = [{ label: 'Dashboard', href: '/dashboard' }, { label: 'Project', href: '/project' }, { label: 'Kanban', href: '/kanban' }, { label: 'Riwayat', href: '/riwayat' }];
   if (can(actor, 'master.manage')) items.push({ label: 'Master', href: '/master' });
   const roleLabel = actor.role === 'MANAGER' ? 'Head of BA dan Head QA' : `PIC ${actor.picStage === 'QA' ? 'Quality Assurance' : 'Business Analyst'}`;
   return (

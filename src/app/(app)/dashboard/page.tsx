@@ -1,24 +1,48 @@
-import Alert from '@mui/material/Alert';
-import Paper from '@mui/material/Paper';
-import Typography from '@mui/material/Typography';
+import { getHeadDashboard, getPicDashboard, type CapacityMode } from '@/modules/dashboard';
+import { getContainer } from '@/platform/container';
+import { weekRange } from '@/shared/calendar';
+import { formatDisplayDate } from '@/shared/iso-date';
 import { requirePageSession } from '../../_lib/session';
+import { HeadView } from './_components/head-view';
+import { PicView } from './_components/pic-view';
 
 /**
- * Dashboard sementara (irisan 1). Dashboard Head dan PIC dibangun pada irisan 4.
- * Masukan: tidak ada. Keluaran: elemen halaman.
- * Efek samping: memvalidasi sesi.
- * Rujukan: FR-01-01 butir 6 (setelah login pengguna masuk Dashboard), Technical Design Lampiran A.
+ * Membaca pilihan periode kapasitas dari parameter alamat (daftar putih).
+ * Masukan: parameter `kap` (`minggu` atau `bulan`) dan `geser` (bilangan bulat). Keluaran: mode dan pergeseran.
+ * Efek samping: tidak ada (fungsi murni).
+ * Rujukan: FR-07-05, Security Design §7 (input tidak tepercaya).
  */
-export default async function DashboardPage() {
+function readCapacityParams(raw: Record<string, string | string[] | undefined>): { mode: CapacityMode; offset: number } {
+  const kap = Array.isArray(raw.kap) ? raw.kap[0] : raw.kap;
+  const geser = Array.isArray(raw.geser) ? raw.geser[0] : raw.geser;
+  const offset = geser && /^-?\d{1,3}$/.test(geser) ? Number(geser) : 0;
+  return { mode: kap === 'bulan' ? 'MONTH' : 'WEEK', offset };
+}
+
+/**
+ * Dashboard (tab pertama): Dashboard Head BA & QA bagi Manager, Dashboard PIC bagi PIC. Pilihan periode kapasitas
+ * berada di alamat sehingga tahan tombol kembali.
+ * Masukan: parameter alamat `kap` dan `geser`. Keluaran: halaman dashboard sesuai peran.
+ * Efek samping: memvalidasi sesi; hanya membaca data.
+ * Rujukan: FR-01-01 butir 6, FR-04, FR-07, BL-43, BL-44.
+ */
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { actor } = await requirePageSession();
-  return (
-    <Paper variant="outlined" sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
-      <Typography variant="h1">Dashboard</Typography>
-      <Typography>Selamat datang, {actor.label}.</Typography>
-      <Alert severity="info">
-        Dashboard {actor.role === 'MANAGER' ? 'Head BA & QA' : 'PIC'} belum tersedia pada tahap ini. Fitur Project, Kanban, dan Riwayat
-        ditambahkan pada tahap berikutnya.
-      </Alert>
-    </Paper>
-  );
+  const input = readCapacityParams(await searchParams);
+  const container = getContainer();
+  const today = container.clock.today();
+  const hrefFor = (mode: CapacityMode, offset: number) => {
+    const query = new URLSearchParams();
+    if (mode === 'MONTH') query.set('kap', 'bulan');
+    if (offset !== 0) query.set('geser', String(offset));
+    const text = query.toString();
+    return text ? `/dashboard?${text}` : '/dashboard';
+  };
+  if (actor.role === 'MANAGER') {
+    const data = await getHeadDashboard(container.dashboard, actor, input);
+    const week = weekRange(today);
+    return <HeadView data={data} today={today} weekLabel={`${formatDisplayDate(week.start).slice(0, 5)} - ${formatDisplayDate(week.end).slice(0, 5)}`} hrefFor={hrefFor} />;
+  }
+  const data = await getPicDashboard(container.dashboard, actor, input);
+  return <PicView data={data} name={actor.label} today={today} hrefFor={hrefFor} />;
 }
