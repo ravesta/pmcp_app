@@ -57,12 +57,12 @@ export function PicView({ data, name, today, hrefFor, showLayers, layersHref, ed
             <div className={styles.asg}>
               {data.assignments.map((row) => (
                 <div key={`${row.projectCode}-${row.stage}`} className={styles.asgCard}>
-                  <div className={styles.row} style={{ justifyContent: 'space-between' }}><b>{row.stage}</b><ToneChip text="Baru" tone="info" /></div>
-                  <div>{row.projectName}</div>
+                  <div className={styles.row} style={{ justifyContent: 'space-between' }}><span className={styles.asgStage}>{row.stage}</span><span className={styles.asgNew}>Baru</span></div>
+                  <b>{row.projectName}</b>
                   <div className={`${styles.mono} ${styles.small} ${styles.muted}`}>{row.projectCode}</div>
-                  <div className={`${styles.mono} ${styles.small}`}>{formatRange(row.estimate)}</div>
+                  <div className={styles.small}>{STAGE_FULL_TEXT[row.stage]} · estimasi <span className={styles.mono}>{formatRange(row.estimate)}</span></div>
                   <div className={`${styles.small} ${styles.muted}`}>Ditugaskan oleh {row.assignedByLabel} · {formatDisplayDate(row.assignedAt.toISOString().slice(0, 10) as IsoDate)}</div>
-                  <LinkButton href={`/project/${row.projectCode}`} size="small" variant="outlined">Buka detail</LinkButton>
+                  <LinkButton href={`/project/${row.projectCode}`} size="small" variant="contained" sx={{ alignSelf: 'flex-start' }}>Buka detail</LinkButton>
                 </div>
               ))}
             </div>
