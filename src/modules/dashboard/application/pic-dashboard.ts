@@ -13,6 +13,9 @@ import type { DashboardDeps } from './ports';
 /** Urutan tahapan project untuk ketergantungan (BL-02). */
 const STAGE_SEQUENCE: ReadonlyArray<StageKind> = ['BA', 'DEV', 'QA'];
 
+/** Nama tahapan untuk pesan benturan jadwal. */
+const STAGE_LABEL: Readonly<Record<StageKind, string>> = { BA: 'Business Analyst', DEV: 'Development', QA: 'Quality Assurance' };
+
 /** Satu baris Antrean pekerjaan. */
 export interface QueueRow {
   readonly projectCode: string;
@@ -26,9 +29,13 @@ export interface QueueRow {
   readonly lateDays: number;
   readonly lagging: boolean;
   readonly progress: number;
+  /** True bila angka progres adalah penyesuaian manual (ditandai `*`). */
+  readonly progressManual: boolean;
   /** Tahapan sebelumnya yang belum Selesai (informasi, tidak memblokir). */
   readonly waitingFor: { readonly stage: StageKind; readonly end: IsoDate | null } | null;
   readonly canUpdate: boolean;
+  /** Tahapan lengkap untuk dialog Perbarui Tahapan yang dibuka dari antrean. */
+  readonly stageView: StageView;
 }
 
 /** Tahapan pada Timeline proyek saya. */
@@ -55,7 +62,9 @@ export interface PicDashboard {
   readonly cards: { readonly newAssignments: number; readonly activeWork: number; readonly late: number; readonly due7: number; readonly todayMinutes: number; readonly todayLogs: number };
   readonly assignments: ReadonlyArray<NewAssignmentRow>;
   readonly queue: ReadonlyArray<QueueRow>;
-  readonly timeline: { readonly range: DateRange; readonly stages: ReadonlyArray<TimelineStage>; readonly conflicts: ReadonlyArray<ScheduleConflict> };
+  readonly timeline: { readonly range: DateRange; readonly stages: ReadonlyArray<TimelineStage>; readonly conflicts: ReadonlyArray<ScheduleConflict>; readonly projects: ReadonlyArray<ProjectView> };
+  /** Batas peringatan revisi berulang untuk dialog Perbarui Tahapan. */
+  readonly revisionThreshold: number;
   readonly capacity: { readonly mode: CapacityMode; readonly offset: number; readonly range: DateRange; readonly value: PicCapacity };
   readonly activity: { readonly project: CardSummary; readonly activity: CardSummary };
   readonly history: { readonly doneCount: number; readonly latest: { readonly date: IsoDate | null; readonly projectCode: string; readonly projectName: string; readonly stage: StageKind } | null };
@@ -118,6 +127,7 @@ export async function getPicDashboard(deps: DashboardDeps, actor: Actor, input: 
   const limit = addDays(today, 7);
 
   const stepByStage = await focusSteps(deps, picId);
+  const revisionThreshold = await deps.project.reference.getRevisionWarnThreshold();
 
   const queue: QueueRow[] = mine
     .map(({ project, stage }) => ({
@@ -131,15 +141,22 @@ export async function getPicDashboard(deps: DashboardDeps, actor: Actor, input: 
       lateDays: stage.lateness.daysPastCurrent,
       lagging: stage.progress.lagging,
       progress: stage.progress.effective,
+      progressManual: stage.progress.manual !== null,
       waitingFor: waitingFor(project, stage),
       canUpdate: stage.rights.update || stage.rights.editAssignees || stage.rights.fillTimeline,
+      stageView: stage,
     }))
     .sort((a, b) => b.lateDays - a.lateDays || Number(b.lagging) - Number(a.lagging) || (a.estimate?.end ?? '9999').localeCompare(b.estimate?.end ?? '9999') || (a.estimate?.start ?? '9999').localeCompare(b.estimate?.start ?? '9999'));
 
   const timelineStages: TimelineStage[] = mine
     .filter(({ stage }) => stage.estimate !== null)
     .map(({ project, stage }) => ({ projectCode: project.code, projectName: project.name, stage: stage.kind, estimate: stage.estimate as Estimate, progress: stage.progress.effective, display: stage.display }));
-  const conflicts = findScheduleConflicts(timelineStages.map((s) => ({ key: `${s.projectCode}:${s.stage}`, label: `${s.projectName} (${s.stage})`, start: s.estimate.start, end: s.estimate.end })));
+  // project dengan hanya tahapan milik PIC yang beririsan dengan rentang timeline, diurut menurut estimasi mulai (untuk Gantt)
+  const ganttProjects = projects
+    .map((project) => ({ ...project, stages: mine.filter((entry) => entry.project.id === project.id && entry.stage.estimate !== null && entry.stage.estimate.end >= timelineRange.start && entry.stage.estimate.start <= timelineRange.end).map((entry) => entry.stage) }))
+    .filter((project) => project.stages.length > 0)
+    .sort((a, b) => (a.stages[0]?.estimate?.start ?? '').localeCompare(b.stages[0]?.estimate?.start ?? ''));
+  const conflicts = findScheduleConflicts(timelineStages.map((s) => ({ key: `${s.projectCode}:${s.stage}`, label: `${s.projectName} (${STAGE_LABEL[s.stage]})`, start: s.estimate.start, end: s.estimate.end })));
 
   const minutesIn = (slice: DateRange) => rangeLogs.filter((log) => log.date >= slice.start && log.date <= slice.end).reduce((sum, log) => sum + (log.endMinute - log.startMinute), 0);
   const ownCards = rangeCards.filter((card) => card.picId === picId);
@@ -157,7 +174,8 @@ export async function getPicDashboard(deps: DashboardDeps, actor: Actor, input: 
     },
     assignments,
     queue,
-    timeline: { range: timelineRange, stages: timelineStages, conflicts },
+    revisionThreshold,
+    timeline: { range: timelineRange, stages: timelineStages, conflicts, projects: ganttProjects },
     capacity: { mode: input.mode, offset: input.offset, range, value: picCapacity(ownCards, range, input.mode, minutesIn) },
     activity: { project: summarize(byKind('PROJECT'), doneKinds.PROJECT, today), activity: summarize(byKind('ACTIVITY'), doneKinds.ACTIVITY, today) },
     history: {

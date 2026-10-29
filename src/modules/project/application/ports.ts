@@ -136,6 +136,8 @@ export interface RevisionInsert {
   readonly note: string;
   readonly createdBy: number;
   readonly sourceCardIds: ReadonlyArray<number>;
+  /** Waktu pembuatan dari `Clock` (bukan `now()` database) agar penggabungan harian konsisten dengan "hari ini" (TD-05). */
+  readonly now: Date;
 }
 
 /** Akses data project dan tahapan. Metode ber-`tx` berjalan di dalam transaksi pemanggil. */

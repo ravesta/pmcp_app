@@ -1,11 +1,10 @@
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import Link from 'next/link';
 import type { DailyActivityResult } from '@/modules/dashboard';
 import { formatDisplayDate, type IsoDate } from '@/shared/iso-date';
-import { DateField } from '@/ui/components/date-field';
+import { AutoSubmitForm } from '@/ui/components/auto-submit-form';
 import { LinkButton } from '@/ui/components/link-controls';
-import { PlainSelect } from '@/ui/components/plain-field';
+import { PlainDateField } from '@/ui/components/plain-date-field';
 import { SegmentedLinks } from '@/ui/components/segmented-links';
 import { ToneChip } from '@/ui/components/tone-chip';
 import { LOG_QUALITY } from '@/ui/format/dashboard-labels';
@@ -26,7 +25,8 @@ interface DailyActivityProps {
 }
 
 /**
- * Tab Aktivitas harian: mode Hari atau Minggu dengan tombol sebelumnya, berikutnya, "Hari ini" dan isian tanggal;
+ * Tab Aktivitas harian: mode Hari atau Minggu, tombol sebelumnya, label rentang, berikutnya, "Hari ini", dan isian
+ * tanggal yang berlaku langsung (PIC dipilih Manager pada baris di atas);
  * ringkasan jam tercatat; dan tiap hari berisi total jam terhadap 8 jam dengan penilaian serta daftar log berurut jam
  * lengkap dengan tautan "Lihat kartu". Hanya baca.
  * Masukan: hasil, keadaan halaman, penanda Manager, hari ini, pembuat alamat, dan tanggal tetangga. Keluaran: tab.
@@ -37,19 +37,18 @@ export function DailyActivity({ result, params, isManager, today, hrefWith, prev
   const dateOf = (date: IsoDate) => hrefWith({ tab: 'harian', tanggal: date });
   return (
     <>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
-        <SegmentedLinks label="Mode" active={params.mode} options={[{ key: 'DAY', label: 'Hari', href: hrefWith({ tab: 'harian', mode: null }) }, { key: 'WEEK', label: 'Minggu', href: hrefWith({ tab: 'harian', mode: 'minggu' }) }]} />
-        <LinkButton href={dateOf(previousDate)} size="small" variant="outlined" aria-label="Sebelumnya">‹</LinkButton>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'end' }}>
+        <SegmentedLinks label="Rentang" active={params.mode} options={[{ key: 'DAY', label: 'Hari', href: hrefWith({ tab: 'harian', mode: null }) }, { key: 'WEEK', label: 'Minggu', href: hrefWith({ tab: 'harian', mode: 'minggu' }) }]} />
+        <LinkButton href={dateOf(previousDate)} size="small" variant="outlined" aria-label={params.mode === 'WEEK' ? 'Minggu sebelumnya' : 'Hari sebelumnya'} sx={{ minWidth: 32 }}>‹</LinkButton>
+        <Box component="span" aria-live="polite" className={styles.small} sx={{ fontWeight: 600, minWidth: 150, textAlign: 'center', alignSelf: 'center' }}>{formatDisplayDate(result.range.start)}{result.range.start !== result.range.end ? ` - ${formatDisplayDate(result.range.end)}` : ''}</Box>
+        <LinkButton href={dateOf(nextDate)} size="small" variant="outlined" aria-label={params.mode === 'WEEK' ? 'Minggu berikutnya' : 'Hari berikutnya'} sx={{ minWidth: 32 }}>›</LinkButton>
         <LinkButton href={hrefWith({ tab: 'harian', tanggal: null })} size="small" variant="outlined">Hari ini</LinkButton>
-        <LinkButton href={dateOf(nextDate)} size="small" variant="outlined" aria-label="Berikutnya">›</LinkButton>
-        <span className={`${styles.mono} ${styles.small}`}>{formatDisplayDate(result.range.start)}{result.range.start !== result.range.end ? ` - ${formatDisplayDate(result.range.end)}` : ''}</span>
-      </Box>
-      <Box component="form" method="get" action="/riwayat" aria-label="Pilih tanggal dan PIC" sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, alignItems: 'end' }}>
-        <input type="hidden" name="tab" value="harian" />
-        {params.mode === 'WEEK' ? <input type="hidden" name="mode" value="minggu" /> : null}
-        <DateField name="tanggal" label="Ke tanggal" defaultValue={params.date ?? today} />
-        {isManager ? <PlainSelect id="harian-pic" name="pic" label="PIC" emptyLabel={null} defaultValue={result.pic ? String(result.pic.id) : ''} options={result.pics.map((pic) => ({ value: String(pic.id), label: `${pic.name} (${pic.stage})` }))} /> : null}
-        <Button type="submit" variant="outlined" size="small">Tampilkan</Button>
+        <AutoSubmitForm action="/riwayat" label="Pilih tanggal" style={{ minWidth: 130 }}>
+          <input type="hidden" name="tab" value="harian" />
+          {params.mode === 'WEEK' ? <input type="hidden" name="mode" value="minggu" /> : null}
+          {isManager && result.pic ? <input type="hidden" name="pic" value={result.pic.id} /> : null}
+          <PlainDateField id="harian-tanggal" name="tanggal" label="Ke tanggal" defaultValue={params.date ?? today} />
+        </AutoSubmitForm>
       </Box>
       <div className={styles.row} role="status">
         <b>Total {formatDuration(result.summary.totalMinutes)}</b>

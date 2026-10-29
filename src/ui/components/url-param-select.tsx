@@ -21,6 +21,8 @@ interface UrlParamSelectProps {
   readonly resetParams?: ReadonlyArray<string>;
   /** Nilai bawaan; bila dipilih, parameter dihapus dari URL agar alamat tetap pendek. */
   readonly defaultValue?: string;
+  /** True bila dropdown mengisi lebar baris dan setinggi isian filter (pemilih periode); bawaan ringkas. */
+  readonly fill?: boolean;
 }
 
 /**
@@ -30,7 +32,7 @@ interface UrlParamSelectProps {
  * Efek samping: menavigasi ke alamat baru saat pilihan berubah.
  * Rujukan: FR-12-01 butir 2 dan 6 (periode, ukuran halaman; berganti ukuran kembali ke halaman 1), mockup v0.2.
  */
-export function UrlParamSelect({ param, value, options, label, resetParams = [], defaultValue }: UrlParamSelectProps) {
+export function UrlParamSelect({ param, value, options, label, resetParams = [], defaultValue, fill = false }: UrlParamSelectProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -50,7 +52,7 @@ export function UrlParamSelect({ param, value, options, label, resetParams = [],
       aria-label={label}
       value={value}
       onChange={onChange}
-      style={{ minHeight: 32, padding: '2px 6px', border: '1px solid var(--line)', borderRadius: 6, background: 'var(--surface)', color: 'inherit', font: 'inherit' }}
+      style={{ ...(fill ? { flex: 1, minWidth: 104, minHeight: 36, padding: '4px 10px' } : { minHeight: 32, padding: '2px 6px' }), border: '1px solid var(--line)', borderRadius: 6, background: 'var(--surface)', color: 'inherit', font: 'inherit' }}
     >
       {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
     </select>

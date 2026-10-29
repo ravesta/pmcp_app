@@ -1,4 +1,5 @@
 import { getHeadDashboard, getPicDashboard, type CapacityMode } from '@/modules/dashboard';
+import { getProjectFormOptions } from '@/modules/project';
 import { getContainer } from '@/platform/container';
 import { weekRange } from '@/shared/calendar';
 import { formatDisplayDate } from '@/shared/iso-date';
@@ -43,6 +44,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     const week = weekRange(today);
     return <HeadView data={data} today={today} weekLabel={`${formatDisplayDate(week.start).slice(0, 5)} - ${formatDisplayDate(week.end).slice(0, 5)}`} hrefFor={hrefFor} />;
   }
-  const data = await getPicDashboard(container.dashboard, actor, input);
-  return <PicView data={data} name={actor.label} today={today} hrefFor={hrefFor} />;
+  const raw = await searchParams;
+  const showLayers = raw.lapisan !== '0';
+  const layersQuery = new URLSearchParams();
+  if (input.mode === 'MONTH') layersQuery.set('kap', 'bulan');
+  if (input.offset !== 0) layersQuery.set('geser', String(input.offset));
+  if (showLayers) layersQuery.set('lapisan', '0');
+  const layersHref = layersQuery.toString() ? `/dashboard?${layersQuery.toString()}` : '/dashboard';
+  const [data, options] = await Promise.all([getPicDashboard(container.dashboard, actor, input), getProjectFormOptions(container.project)]);
+  return <PicView data={data} name={actor.label} today={today} hrefFor={hrefFor} showLayers={showLayers} layersHref={layersHref} editContext={{ options, revisionThreshold: data.revisionThreshold, isManager: false }} />;
 }

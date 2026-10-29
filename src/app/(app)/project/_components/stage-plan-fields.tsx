@@ -45,7 +45,7 @@ export function StagePlanFields({ title, names, picOptions, defaultPicIds, showD
       <Typography variant="h3" sx={{ fontSize: 13, fontWeight: 600 }}>{title}</Typography>
       {showPics ? <MultiSelectField name={names.pics} label="PIC (boleh lebih dari satu)" options={picOptions} defaultIds={defaultPicIds} error={errors.pics} /> : null}
       {showDates ? (
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.5 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr', gap: 1.5 }}>
           <DateField name={names.start} label="Estimasi mulai" defaultValue={defaultStart} error={errors.estimate} helperText="Estimasi pertama menjadi estimasi awal." />
           <DateField name={names.end} label="Estimasi selesai" defaultValue={defaultEnd} />
         </Box>

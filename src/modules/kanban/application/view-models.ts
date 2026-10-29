@@ -36,6 +36,8 @@ export interface CardView {
   /** Estimasi terkini tahapan kartu project (dengan penanda revisi di UI); null untuk activity. */
   readonly stageEstimate: Estimate | null;
   readonly markers: ReadonlyArray<PlanMarker>;
+  /** Progres tahapan gabungan semua kartu dan PIC (kartu project); null untuk activity atau bila tidak tersedia. */
+  readonly stageProgress: StageProgressSummary | null;
   readonly version: number;
   readonly cancelledAt: Date | null;
   readonly cancelReason: string | null;
@@ -43,8 +45,20 @@ export interface CardView {
   readonly canManage: boolean;
 }
 
+/** Ringkasan progres dan revisi tahapan yang ditampilkan pada kartu project. */
+export interface StageProgressSummary {
+  readonly percent: number;
+  /** True bila angka adalah penyesuaian manual (ditandai `*`). */
+  readonly manual: boolean;
+  /** True bila tahapan Tertinggal dari laju. */
+  readonly lagging: boolean;
+  readonly revisionCount: number;
+}
+
 /** Konteks tampilan satu permintaan. */
 export interface CardViewContext {
+  /** Progres tahapan menurut kunci `idProject:tahapan`; tidak ada pada konteks yang tidak membutuhkannya. */
+  readonly stageProgress?: ReadonlyMap<string, StageProgressSummary>;
   readonly today: IsoDate;
   readonly rescheduleThreshold: number;
   readonly actor: Actor;
@@ -97,6 +111,7 @@ export function toCardView(row: BoardCardRow, ctx: CardViewContext): CardView {
     logCount: row.logCount,
     isAdhoc: card.isAdhoc,
     stageEstimate: row.stageEstimate,
+    stageProgress: card.projectId !== null && card.stage !== null ? (ctx.stageProgress?.get(`${card.projectId}:${card.stage}`) ?? null) : null,
     markers: cancelled
       ? []
       : computeMarkers({

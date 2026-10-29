@@ -38,3 +38,18 @@ a.kpi:hover { border-color: var(--accent); }
 .day { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
 .mine td { background: var(--run-bg); }
 @media (max-width: 900px) { .panels { grid-template-columns: 1fr; } .capStats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.dprog { display: flex; gap: 6px; align-items: center; min-width: 90px; }
+.bar { flex: 1; height: 6px; background: var(--soft); border-radius: 3px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); }
+.roleN { color: var(--muted); font-size: 12px; font-weight: 400; }
+.capSum { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
+.capSum > div { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; }
+.capSum span { font-size: 12px; color: var(--muted); }
+.capSum b { font-size: 20px; font-family: var(--mono); }
+.hnote { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.panel { border-top: 4px solid var(--accent); }
+.panelA { border-top-color: var(--hold); }
+.ktype { font-size: 11px; font-weight: 700; color: #fff; background: var(--accent); border-radius: 4px; padding: 0 7px; line-height: 18px; }
+.ktypeA { background: var(--hold); }
+.conflict { padding: 8px 12px; border-radius: 6px; font-size: 13px; background: var(--warn-bg); color: var(--warn); }
+.conflict ul { margin: 4px 0 0; padding-left: 18px; }

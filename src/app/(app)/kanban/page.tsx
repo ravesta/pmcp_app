@@ -64,7 +64,7 @@ export default async function KanbanPage({ searchParams }: { searchParams: Promi
             )
           }
         />
-        <KanbanFilters params={params} pics={board.pics} isPic={isPic} />
+        <KanbanFilters params={params} pics={board.pics} isPic={isPic} range={board.range} />
         <ComplianceTable view={compliance} myPicId={actor.picId} />
         <p className={styles.hint}>Kartu menunjukkan apakah rencana berjalan. Kartu tidak mengubah status tahapan di project. Seret kartu ke kolom lain atau pakai tombol panah.</p>
         <div className={styles.board}>

@@ -47,6 +47,8 @@ export interface SearchProjectsResult {
   readonly pageSize: number;
   /** Jumlah SELURUH project per status, tidak dipengaruhi filter (FR-14-02 butir 2). */
   readonly statusCounts: Readonly<Record<ProjectStatus, number>>;
+  /** Batas peringatan revisi berulang (dipakai dialog Perbarui Tahapan yang dibuka dari bar Gantt). */
+  readonly revisionThreshold: number;
 }
 
 /**
@@ -132,6 +134,7 @@ export async function searchProjects(deps: ProjectDeps, actor: Actor, input: Sea
     page: paging.page,
     pageSize: paging.pageSize,
     statusCounts,
+    revisionThreshold: ctx.revisionThreshold,
   };
 }
 

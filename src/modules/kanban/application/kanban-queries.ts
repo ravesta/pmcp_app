@@ -5,7 +5,7 @@
  * Semua penyaringan terjadi di server; penanda dihitung ulang setiap tampil (FR-21-02 butir 3).
  */
 import type { Actor } from '@/modules/auth';
-import { getCardStageTarget, planAutoRevision, type AutoRevisionPlan, type StageKind } from '@/modules/project';
+import { getCardStageTarget, listActiveProjectViews, planAutoRevision, type AutoRevisionPlan, type StageKind } from '@/modules/project';
 import { MESSAGES } from '@/platform/messages';
 import { monthRange, weekRange, type DateRange } from '@/shared/calendar';
 import type { IsoDate } from '@/shared/iso-date';
@@ -25,7 +25,7 @@ import type {
   RescheduleRow,
   WorkLogRow,
 } from './ports';
-import { toCardView, type CardView, type CardViewContext } from './view-models';
+import { toCardView, type CardView, type CardViewContext, type StageProgressSummary } from './view-models';
 
 /** Jumlah kartu per kolom yang dimuat pertama kali; selebihnya lewat "Tampilkan lebih banyak" (anggaran muat 3 detik). */
 const DEFAULT_COLUMN_LIMIT = 40;
@@ -92,7 +92,9 @@ async function viewContext(deps: KanbanDeps, actor: Actor): Promise<CardViewCont
  * Rujukan: FR-16-01 butir 1 sampai 7, BL-29, BL-37; AC: kartu Done bulan lalu tidak tampil pada periode Minggu ini.
  */
 export async function getBoard(deps: KanbanDeps, actor: Actor, input: BoardInput): Promise<BoardView> {
-  const ctx = await viewContext(deps, actor);
+  const baseContext = await viewContext(deps, actor);
+  const stageProgress = await loadStageProgress(deps, actor);
+  const ctx: CardViewContext = { ...baseContext, stageProgress };
   const range = resolvePeriod(input.period, input.from, input.to, ctx.today);
   const filter: BoardFilter = { range: input.extendsOnly ? null : range, picId: input.picId, kind: input.kind, q: input.q.trim(), extendsOnly: input.extendsOnly };
   const columnLimit = Math.min(500, Math.max(10, input.columnLimit ?? DEFAULT_COLUMN_LIMIT));
@@ -255,4 +257,22 @@ export async function listProjectPlans(deps: KanbanDeps, actor: Actor, projectId
 export async function listProjectWorkLogs(deps: KanbanDeps, projectId: number, filter: ProjectLogFilter, page: number, pageSize: number): Promise<ProjectLogPage> {
   const size = [5, 10, 20].includes(pageSize) ? pageSize : 10;
   return deps.queries.listProjectLogs(projectId, filter, Math.max(1, Math.floor(page) || 1), size);
+}
+
+/**
+ * Membaca progres dan jumlah revisi tiap tahapan project aktif untuk ditampilkan pada kartu project (baris "Tahapan").
+ * Angka berasal dari modul project sehingga sama dengan yang tampil di Dashboard dan Detail Project.
+ * Masukan: dependensi dan pelaku. Keluaran: peta `idProject:tahapan` ke ringkasan.
+ * Efek samping: tidak ada (hanya baca).
+ * Rujukan: FR-05-02 (progres tahapan), FR-13-04, NFR-14 (angka sama dengan layar tujuan), mockup v0.2 (kprog "Tahapan").
+ */
+async function loadStageProgress(deps: KanbanDeps, actor: Actor): Promise<Map<string, StageProgressSummary>> {
+  const projects = await listActiveProjectViews(deps.project, actor);
+  const map = new Map<string, StageProgressSummary>();
+  for (const project of projects) {
+    for (const stage of project.stages) {
+      map.set(`${project.id}:${stage.kind}`, { percent: stage.progress.effective, manual: stage.progress.manual !== null, lagging: stage.progress.lagging, revisionCount: stage.revisionCount });
+    }
+  }
+  return map;
 }

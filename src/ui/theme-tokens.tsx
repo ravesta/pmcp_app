@@ -24,7 +24,7 @@ const DARK = {
 
 /**
  * Menyuntikkan token warna mockup (variabel CSS) untuk tema terang dan gelap, mengikuti pilihan tema sistem atau
- * atribut `data-theme`. Komponen layar memakai variabel ini (mis. `var(--ba)`) agar warna status, tahapan, dan Gantt
+ * atribut `data-theme`. Tautan: `a` memakai warna aksen dan `a.pn` dipakai nama project. Komponen layar memakai variabel ini (mis. `var(--ba)`) agar warna status, tahapan, dan Gantt
  * sama dengan mockup yang disetujui.
  * Masukan: tidak ada. Keluaran: gaya global.
  * Efek samping: menambahkan aturan CSS global saat dirender.
@@ -38,6 +38,10 @@ export function ThemeTokens() {
         '@media (prefers-color-scheme: dark)': { ':root:not([data-theme="light"])': DARK },
         ':root[data-theme="dark"]': DARK,
         '.mono': { fontFamily: 'var(--mono)', fontVariantNumeric: 'tabular-nums' },
+        // Tautan biasa mengikuti `.lnk` mockup (warna aksen, bergaris bawah); nama project (`a.pn`) tegas tanpa garis bawah.
+        a: { color: 'var(--accent)' },
+        'a.pn': { color: 'var(--ink)', fontWeight: 600, textDecoration: 'none' },
+        'a.pn:hover': { color: 'var(--accent)', textDecoration: 'underline' },
       }}
     />
   );

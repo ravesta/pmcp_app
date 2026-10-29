@@ -182,6 +182,7 @@ export async function applyCardRevision(deps: ProjectDeps, tx: TxContext, actor:
       note,
       createdBy: actor.userId,
       sourceCardIds: [input.cardId],
+      now: deps.clock.now(),
     });
   }
   const saved = await deps.projects.saveStage(tx, stage.id, stage.version, toStageWrite(stage, { estimate: next }));

@@ -5,6 +5,7 @@ import { formatDisplayDate } from '@/shared/iso-date';
 import { formatAssignees, formatRange, STAGE_STATUS_TEXT } from '@/ui/format/project-labels';
 import { placeRange, type Span, type Timeline } from '@/ui/gantt/timeline';
 import styles from './gantt.module.css';
+import { StageEditTrigger, type StageEditContext } from './stage-edit-trigger';
 
 /** Tinggi baris tahapan yang punya timeline dan yang tidak (piksel). */
 export const ROW_HEIGHT = 36;
@@ -18,6 +19,10 @@ interface GanttStageBarProps {
   readonly timeline: Timeline;
   /** Menampilkan lapisan estimasi awal, aktual, dan catatan (FR-12-02 butir 7). */
   readonly showLayers: boolean;
+  /** Data dialog Perbarui Tahapan; bila ada, bar dan "Atur" bagi pelaku yang berhak membuka dialog di tempat. */
+  readonly editContext?: StageEditContext;
+  /** True bila Gantt tidak berada di Detail Project (dialog menampilkan "Lihat detail project"). */
+  readonly showDetailLink?: boolean;
 }
 
 /**
@@ -119,20 +124,22 @@ function notePosition(endPx: number, leftPx: number, noteWidth: number, trackWid
  * Bar Gantt satu tahapan seperti mockup: bar estimasi terkini berisi PIC dan progres, estimasi awal (kotak putus-putus),
  * tambahan waktu hasil revisi (bergaris kuning), telat murni (bergaris merah "+n hr"), hold (bergaris ungu), garis aktual,
  * catatan di samping bar, dan garis hari ini. Tahapan tanpa timeline menampilkan teks "Belum ada timeline" beserta tautan Atur.
- * Masukan: kode dan nama project, tahapan, skala waktu, dan penanda lapisan. Keluaran: sel jalur satu baris.
- * Efek samping: tidak ada (komponen murni; bar berupa tautan ke Detail Project).
+ * Masukan: kode dan nama project, tahapan, skala waktu, penanda lapisan, dan data dialog. Keluaran: sel jalur satu baris.
+ * Efek samping: tidak ada pada komponen ini; bar dan "Atur" bagi pelaku yang berhak membuka dialog Perbarui Tahapan
+ * (komponen klien `StageEditTrigger`), selain itu berupa tautan ke Detail Project.
  * Rujukan: FR-12-01 butir 1 dan 7, FR-12-02, BL-17, CL-026, CL-027, handoff UX/UI §9, mockup v0.2.
  */
-export function GanttStageBar({ projectCode, projectName, stage, timeline, showLayers }: GanttStageBarProps) {
+export function GanttStageBar({ projectCode, projectName, stage, timeline, showLayers, editContext, showDetailLink = true }: GanttStageBarProps) {
   const bar = stage.bar;
   const canEdit = stage.rights.update || stage.rights.reopen || stage.rights.fillTimeline || stage.rights.editAssignees;
   const href = canEdit ? `/project/${projectCode}?ubah=${stage.kind}` : `/project/${projectCode}#tahap-${stage.kind}`;
+  const opensDialog = canEdit && editContext !== undefined;
 
   if (!bar) {
     return (
       <span className={styles.gnt}>
         Belum ada timeline · {stage.assignees.length > 0 ? formatAssignees(stage.assignees) : 'belum ada PIC'}
-        {canEdit ? <> <Link href={href}>Atur</Link></> : null}
+        {opensDialog ? <> <StageEditTrigger projectCode={projectCode} projectName={projectName} stage={stage} context={editContext} variant="link" showDetailLink={showDetailLink}>Atur</StageEditTrigger></> : canEdit ? <> <Link href={href}>Atur</Link></> : null}
       </span>
     );
   }
@@ -156,13 +163,21 @@ export function GanttStageBar({ projectCode, projectName, stage, timeline, showL
   return (
     <>
       {baseline ? <div className={styles.gbase} style={{ left: baseline.leftPx, width: baseline.widthPx }} title={`Estimasi awal ${formatRange(bar.baseline)}`} /> : null}
-      {main ? (
-        <Link href={href} className={classes} style={{ left: main.leftPx, width: main.widthPx }} title={tip} aria-label={tip}>
-          <i className={styles.pg} style={{ width: `${stage.progress.effective}%` }} />
-          {extension ? <i className={styles.sext} style={{ left: extension.leftPx - main.leftPx, width: Math.max(0, Math.min(extension.widthPx, main.widthPx - (extension.leftPx - main.leftPx))) }} /> : null}
-          <span className={styles.txt}>{barText(stage, bar.estimate.start < timeline.start, bar.estimate.end > timeline.end)}</span>
-        </Link>
-      ) : null}
+      {main ? (() => {
+        const content = (
+          <>
+            <i className={styles.pg} style={{ width: `${stage.progress.effective}%` }} />
+            {extension ? <i className={styles.sext} style={{ left: extension.leftPx - main.leftPx, width: Math.max(0, Math.min(extension.widthPx, main.widthPx - (extension.leftPx - main.leftPx))) }} /> : null}
+            <span className={styles.txt}>{barText(stage, bar.estimate.start < timeline.start, bar.estimate.end > timeline.end)}</span>
+          </>
+        );
+        const position = { left: main.leftPx, width: main.widthPx };
+        return opensDialog ? (
+          <StageEditTrigger projectCode={projectCode} projectName={projectName} stage={stage} context={editContext} variant="bar" className={classes} style={position} title={tip} ariaLabel={tip} showDetailLink={showDetailLink}>{content}</StageEditTrigger>
+        ) : (
+          <Link href={href} className={classes} style={position} title={tip} aria-label={tip}>{content}</Link>
+        );
+      })() : null}
       {overrun && bar.overrun ? (
         <div className={styles.gover} style={{ left: overrun.leftPx, width: overrun.widthPx }} title={`Telat ${bar.overrun.days} hari dari estimasi terkini`}>
           <span>+{bar.overrun.days} hr</span>

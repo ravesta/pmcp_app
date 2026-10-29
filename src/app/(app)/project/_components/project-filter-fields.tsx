@@ -32,7 +32,7 @@ export function ProjectPrimaryFilters({ params, projectOptions }: PrimaryFilters
   return (
     <>
       <PlainInput id="filter-cari" name="q" label="Cari" defaultValue={params.filter.q} placeholder="ID, nama, referensi, aplikasi, atau PIC" maxLength={100} />
-      <MultiSelectField name="proyek" label="Nama project" options={projectOptions.map((p) => ({ id: p.id, label: `${p.name} (${p.code})` }))} defaultIds={params.filter.projectIds} />
+      <MultiSelectField name="proyek" label="Nama project" options={projectOptions.map((p) => ({ id: p.id, label: `${p.name} (${p.code})` }))} defaultIds={params.filter.projectIds} placeholder="Semua project" searchable submitOnClose />
     </>
   );
 }
@@ -59,13 +59,13 @@ export function PeriodPicker({ window, defaults, today, previousHref, nextHref, 
   // jendela yang sedang dilihat boleh di luar rentang pilihan standar (hasil geser): tetap tampil sebagai pilihan
   const withCurrent = (key: string) => (options.some((o) => o.value === key) ? options : [...options, { value: key, label: key }].sort((a, b) => a.value.localeCompare(b.value)));
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, gridColumn: '1 / -1' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
       <span style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 500 }} id="periode-label">Periode tampilan</span>
-      <div role="group" aria-labelledby="periode-label" style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+      <div role="group" aria-labelledby="periode-label" style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'nowrap' }}>
         <LinkButton href={previousHref} size="small" variant="outlined" sx={{ minWidth: 34, px: 0 }} aria-label="Geser periode satu bulan ke belakang" title="Geser 1 bulan ke belakang">←</LinkButton>
-        <UrlParamSelect param="dari" value={window.from} label="Dari bulan" options={withCurrent(window.from)} resetParams={['hal']} defaultValue={defaults.from} />
+        <UrlParamSelect param="dari" value={window.from} label="Dari bulan" options={withCurrent(window.from)} resetParams={['hal']} defaultValue={defaults.from} fill />
         <span aria-hidden>–</span>
-        <UrlParamSelect param="sampai" value={window.to} label="Sampai bulan" options={withCurrent(window.to)} resetParams={['hal']} defaultValue={defaults.to} />
+        <UrlParamSelect param="sampai" value={window.to} label="Sampai bulan" options={withCurrent(window.to)} resetParams={['hal']} defaultValue={defaults.to} fill />
         <LinkButton href={nextHref} size="small" variant="outlined" sx={{ minWidth: 34, px: 0 }} aria-label="Geser periode satu bulan ke depan" title="Geser 1 bulan ke depan">→</LinkButton>
         <LinkButton href={nowHref} size="small">Bulan ini</LinkButton>
       </div>

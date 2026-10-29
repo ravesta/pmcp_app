@@ -374,6 +374,8 @@ export function createPrismaProjectRepository(prisma: PrismaClient): ProjectRepo
           category_name: revision.categoryName,
           note: revision.note,
           created_by: BigInt(revision.createdBy),
+          created_at: revision.now,
+          updated_at: revision.now,
         },
         select: { id: true },
       });

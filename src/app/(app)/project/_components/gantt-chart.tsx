@@ -6,6 +6,8 @@ import { formatDisplayDate } from '@/shared/iso-date';
 import { PROJECT_STATUS_TEXT, STAGE_FULL_TEXT } from '@/ui/format/project-labels';
 import type { Timeline } from '@/ui/gantt/timeline';
 import styles from './gantt.module.css';
+import { GanttScrollToToday } from './gantt-scroll-to-today';
+import type { StageEditContext } from './stage-edit-trigger';
 import { EMPTY_ROW_HEIGHT, GanttStageBar, ROW_HEIGHT } from './gantt-stage-bar';
 
 /** Lebar kolom nama (piksel), sama dengan kelas gl pada mockup. */
@@ -18,6 +20,10 @@ interface GanttChartProps {
   readonly showLayers: boolean;
   /** Pesan bila tidak ada project pada periode dan filter ini. */
   readonly emptyMessage?: string;
+  /** Data dialog Perbarui Tahapan; bila ada, klik bar membuka dialog di tempat bagi pelaku yang berhak. */
+  readonly editContext?: StageEditContext;
+  /** True bila Gantt tidak berada di Detail Project (dialog menampilkan "Lihat detail project"). */
+  readonly showDetailLink?: boolean;
 }
 
 /**
@@ -45,19 +51,21 @@ function trackStyle(timeline: Timeline, startWeekday: number): CSSProperties {
 /**
  * Gantt tahapan semua project seperti mockup v0.2: header tanggal menempel di atas, kolom nama menempel di kiri,
  * baris kelompok per project (nama tertaut, ID, status berwarna) dengan tiga baris tahapan, garis hari ini, dan akhir
- * pekan diarsir. Dapat digulir sendiri.
- * Masukan: project halaman ini, skala waktu, penanda lapisan, dan pesan kosong. Keluaran: grafik Gantt.
- * Efek samping: tidak ada (komponen murni; nama project dan bar berupa tautan ke Detail Project).
+ * pekan diarsir. Dapat digulir sendiri dan saat dibuka otomatis menggulir ke garis hari ini.
+ * Masukan: project halaman ini, skala waktu, penanda lapisan, pesan kosong, dan data dialog. Keluaran: grafik Gantt.
+ * Efek samping: tidak ada pada komponen ini (nama project berupa tautan ke Detail Project; bar bagi pelaku yang berhak
+ * membuka dialog Perbarui Tahapan).
  * Rujukan: FR-12-01, FR-12-02, FR-12-03, BL-17, handoff UX/UI §8 (kolom nama tetap) dan §9, mockup v0.2 (ganttHtml).
  */
-export function GanttChart({ projects, timeline, showLayers, emptyMessage = 'Tidak ada tahapan pada periode dan filter ini.' }: GanttChartProps) {
+export function GanttChart({ projects, timeline, showLayers, emptyMessage = 'Tidak ada tahapan pada periode dan filter ini.', editContext, showDetailLink = true }: GanttChartProps) {
   if (projects.length === 0) return <div className={styles.empty}>{emptyMessage}</div>;
   const startWeekday = dayOfWeek(timeline.start);
   const track = trackStyle(timeline, startWeekday);
-  const today = timeline.todayPx === null ? null : <div className={styles.gtd} style={{ left: timeline.todayPx }} />;
+  const today = timeline.todayPx === null ? null : <div className={styles.gtd} style={{ left: timeline.todayPx }} data-today="" />;
 
   return (
-    <div className={styles.gt}>
+    <div className={styles.gt} data-gantt-box="">
+      <GanttScrollToToday signature={`${timeline.zoom}|${timeline.start}|${timeline.end}`} />
       <div style={{ width: timeline.widthPx + NAME_COLUMN }}>
         <div className={`${styles.gr} ${styles.gh}`}>
           <div className={styles.gl}>{formatDisplayDate(timeline.start)} - {formatDisplayDate(timeline.end)}</div>
@@ -81,7 +89,7 @@ export function GanttChart({ projects, timeline, showLayers, emptyMessage = 'Tid
               <div key={stage.stageId} className={styles.gr}>
                 <div className={styles.gl}>{STAGE_FULL_TEXT[stage.kind]}</div>
                 <div className={styles.gc} style={{ ...track, height: stage.bar ? ROW_HEIGHT : EMPTY_ROW_HEIGHT }}>
-                  <GanttStageBar projectCode={project.code} projectName={project.name} stage={stage} timeline={timeline} showLayers={showLayers} />
+                  <GanttStageBar projectCode={project.code} projectName={project.name} stage={stage} timeline={timeline} showLayers={showLayers} editContext={editContext} showDetailLink={showDetailLink} />
                   {today}
                 </div>
               </div>

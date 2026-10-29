@@ -47,7 +47,7 @@ export function CardHeader({ title, subtitle, actions, level = 2 }: CardHeaderPr
   return (
     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px', alignItems: 'center', justifyContent: 'space-between' }}>
       <Box>
-        <Typography variant={level === 1 ? 'h1' : 'h2'} component={level === 1 ? 'h1' : 'h2'} sx={{ fontSize: level === 1 ? 20 : 15 }}>{title}</Typography>
+        <Typography variant={level === 1 ? 'h1' : 'h2'} component={level === 1 ? 'h1' : 'h2'} sx={{ fontSize: 15 }}>{title}</Typography>
         {subtitle ? <Box sx={{ color: 'var(--muted)', fontSize: 12, mt: '2px' }}>{subtitle}</Box> : null}
       </Box>
       {actions ? <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>{actions}</Box> : null}
@@ -58,6 +58,8 @@ export function CardHeader({ title, subtitle, actions, level = 2 }: CardHeaderPr
 /** Properti bagian bertepi di dalam kartu. */
 interface SectionProps {
   readonly title: string;
+  /** Keterangan kecil di bawah judul (mis. arti bagian atau periode yang dipakai). */
+  readonly description?: string;
   readonly actions?: ReactNode;
   readonly children: ReactNode;
   /** Menempelkan penanda `id` untuk tautan langsung (mis. ke tahapan). */
@@ -66,15 +68,18 @@ interface SectionProps {
 
 /**
  * Bagian bertepi di dalam kartu dengan judul kecil dan tombol opsional (Informasi project, Tahapan, Jadwal, dst.).
- * Masukan: judul, tombol, isi, dan id. Keluaran: bagian bertepi.
+ * Masukan: judul, keterangan, tombol, isi, dan id. Keluaran: bagian bertepi.
  * Efek samping: tidak ada (komponen murni).
  * Rujukan: mockup v0.2 (kelas fsec), Screen [014].
  */
-export function Section({ title, actions, children, id }: SectionProps) {
+export function Section({ title, description, actions, children, id }: SectionProps) {
   return (
     <Box component="section" id={id} aria-label={title} sx={{ border: '1px solid var(--line)', borderRadius: '10px', p: '14px 16px', display: 'flex', flexDirection: 'column', gap: 1.5, scrollMarginTop: 16 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-        <Typography variant="h3" component="h3" sx={{ fontSize: 13 }}>{title}</Typography>
+        <Box>
+          <Typography variant="h3" component="h3" sx={{ fontSize: 13 }}>{title}</Typography>
+          {description ? <Box sx={{ fontSize: 12, color: 'var(--muted)' }}>{description}</Box> : null}
+        </Box>
         {actions}
       </Box>
       {children}

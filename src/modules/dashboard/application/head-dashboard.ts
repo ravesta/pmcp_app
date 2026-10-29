@@ -22,6 +22,8 @@ export interface RiskRow {
   readonly pics: ReadonlyArray<string>;
   readonly end: IsoDate | null;
   readonly progress: number;
+  /** True bila angka progres adalah penyesuaian manual (ditandai `*`). */
+  readonly progressManual: boolean;
   readonly lateDays: number;
   readonly lagging: boolean;
   readonly held: boolean;
@@ -40,6 +42,8 @@ export interface DueRow {
   readonly daysLeft: number;
   readonly lagging: boolean;
   readonly progress: number;
+  /** True bila angka progres adalah penyesuaian manual (ditandai `*`). */
+  readonly progressManual: boolean;
 }
 
 /** Ringkasan per peran (FR-04-05). */
@@ -123,6 +127,7 @@ function buildRisks(stages: ReadonlyArray<{ project: ProjectView; stage: StageVi
       pics: stage.assignees.map((a) => a.name),
       end: stage.estimate?.end ?? null,
       progress: stage.progress.effective,
+      progressManual: stage.progress.manual !== null,
       lateDays: stage.lateness.daysPastCurrent,
       lagging: stage.progress.lagging,
       held,
@@ -153,6 +158,7 @@ function buildDue(stages: ReadonlyArray<{ project: ProjectView; stage: StageView
       daysLeft: calendarDaysBetween(today, (stage.estimate as { end: IsoDate }).end),
       lagging: stage.progress.lagging,
       progress: stage.progress.effective,
+      progressManual: stage.progress.manual !== null,
     }))
     .sort((a, b) => a.end.localeCompare(b.end) || a.projectCode.localeCompare(b.projectCode));
 }

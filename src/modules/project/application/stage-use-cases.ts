@@ -475,6 +475,7 @@ export async function reviseStageEstimate(deps: ProjectDeps, actor: Actor, input
       note: check.note,
       createdBy: actor.userId,
       sourceCardIds: [],
+      now: deps.clock.now(),
     });
     const saved = await deps.projects.saveStage(tx, stage.id, stage.version, toStageWrite(stage, { estimate: newEstimate }));
     if (!saved) return fail({ code: 'CONFLICT', message: MESSAGES.CONFLICT });

@@ -41,7 +41,7 @@ export function AppHeader({ items, userName, roleLabel, logoutAction }: AppHeade
   return (
     <Box component="header" sx={{ bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', px: 2, display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
       <Typography variant="h2" component="span" sx={{ fontSize: 18 }}>PMCP</Typography>
-      <Tabs value={current === -1 ? false : current} aria-label="Menu utama" variant="scrollable" scrollButtons="auto" sx={{ flex: 1, minWidth: 0 }}>
+      <Tabs value={current === -1 ? false : current} aria-label="Menu utama" variant="scrollable" scrollButtons={false} sx={{ flex: 1, minWidth: 0 }}>
         {items.map((item) => (
           <Tab key={item.href} label={item.label} component={Link} href={item.href} aria-current={pathname.startsWith(item.href) ? 'page' : undefined} />
         ))}

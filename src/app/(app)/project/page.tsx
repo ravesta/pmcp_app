@@ -162,7 +162,7 @@ export default async function ProjectPage({ searchParams }: { searchParams: Prom
             action={filterCount > 0 ? <LinkButton href={resetHref} variant="outlined">Reset filter</LinkButton> : undefined}
           />
         ) : isGantt ? (
-          <GanttChart projects={result.projects} timeline={buildTimeline(params.window, params.zoom, today)} showLayers={params.showLayers} />
+          <GanttChart projects={result.projects} timeline={buildTimeline(params.window, params.zoom, today)} showLayers={params.showLayers} editContext={{ options, revisionThreshold: result.revisionThreshold, isManager: actor.role === 'MANAGER' }} />
         ) : (
           <ProjectListTable projects={result.projects} />
         )}

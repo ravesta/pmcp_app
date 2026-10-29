@@ -1,6 +1,7 @@
 'use client';
 
 import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 import type { ProjectView } from '@/modules/project';
 import { ActionDialog } from '@/ui/components/action-dialog';
@@ -19,7 +20,8 @@ interface EditInfoButtonProps {
 }
 
 /**
- * Tombol "Ubah informasi" beserta dialognya (Screen [015]): atribut project, status, dan alasan. Aplikasi nonaktif
+ * Tombol "Ubah informasi" beserta dialognya (Screen [015]): atribut project, status, dan alasan dalam grid empat kolom
+ * seperti mockup v0.2 dengan keterangan bahwa setiap perubahan dicatat. Aplikasi nonaktif
  * yang sudah dipakai project tetap tampil terpilih dengan penanda "(nonaktif)" agar tidak terhapus tanpa disengaja.
  * Masukan: project dan daftar aplikasi aktif. Keluaran: tombol dan dialog.
  * Efek samping: menyimpan buka/tutup dialog di state; mengirim `updateProjectInfoAction` saat Simpan.
@@ -36,7 +38,7 @@ export function EditInfoButton({ project, activeApplications }: EditInfoButtonPr
       <Button variant="outlined" onClick={() => setOpen(true)}>Ubah informasi</Button>
       {open ? (
         <ActionDialog
-          title={`Ubah informasi ${project.code}`}
+          title="Ubah informasi project"
           submitLabel="Simpan perubahan"
           action={updateProjectInfoAction}
           hidden={{ projectId: project.id, expectedVersion: project.version }}
@@ -44,7 +46,9 @@ export function EditInfoButton({ project, activeApplications }: EditInfoButtonPr
           maxWidth="md"
         >
           {({ fieldErrors }) => (
-            <ProjectInfoFields
+            <>
+              <Typography variant="body2" color="text.secondary">Setiap perubahan dicatat: siapa yang mengubah, kapan, serta nilai lama dan barunya.</Typography>
+              <ProjectInfoFields
               defaults={{
                 code: project.code,
                 name: project.name,
@@ -61,7 +65,9 @@ export function EditInfoButton({ project, activeApplications }: EditInfoButtonPr
               applications={applicationChoices}
               statusChoices={ALL_STATUSES}
               fieldErrors={fieldErrors}
-            />
+              grid
+              />
+            </>
           )}
         </ActionDialog>
       ) : null}

@@ -40,7 +40,15 @@ export function KanbanCard({ card, openHref, showOwner }: KanbanCardProps) {
             <span className={`${styles.stageTag} ${styles[card.stage] ?? ''}`}>{card.stage}</span>
             <span className={styles.small}>{STAGE_FULL_TEXT[card.stage]}{card.stepName ? ` · ${card.stepName}` : ''}</span>
           </div>
-          <div className={`${styles.small} ${styles.muted}`}>Estimasi tahapan <span className={styles.mono}>{formatRange(card.stageEstimate, 'belum ada')}</span></div>
+          <div className={`${styles.small} ${styles.muted}`}>Estimasi tahapan <span className={styles.mono}>{formatRange(card.stageEstimate, 'belum ada')}</span>{card.stageProgress && card.stageProgress.revisionCount > 0 ? <> <ToneChip text={`R${card.stageProgress.revisionCount}`} tone="rev" /></> : null}</div>
+          {card.stageProgress ? (
+            <div className={styles.progress} title={`Progres tahapan ${STAGE_FULL_TEXT[card.stage]} (gabungan semua kartu dan PIC)`}>
+              <span className={`${styles.small} ${styles.muted}`}>Tahapan</span>
+              <div className={styles.bar} role="img" aria-label={`Progres tahapan ${card.stageProgress.percent}%`}><i style={{ width: `${card.stageProgress.percent}%` }} /></div>
+              <b className={`${styles.mono} ${styles.small}`}>{card.stageProgress.percent}%{card.stageProgress.manual ? '*' : ''}</b>
+              {card.stageProgress.lagging ? <ToneChip text="Tertinggal" tone="warn" /> : null}
+            </div>
+          ) : null}
         </>
       ) : null}
       <div className={`${styles.mono} ${styles.small}`}>

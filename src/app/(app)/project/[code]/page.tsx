@@ -145,7 +145,7 @@ export default async function ProjectDetailPage({
       <Section title="Jadwal">
         {timeline ? (
           <>
-            <GanttChart projects={[project]} timeline={timeline} showLayers={showLayers} />
+            <GanttChart projects={[project]} timeline={timeline} showLayers={showLayers} editContext={{ options, revisionThreshold, isManager: actor.role === 'MANAGER' }} showDetailLink={false} />
             <GanttLegend showLayers={showLayers} toggleHref={showLayers ? `${base}?lapisan=0` : base} />
           </>
         ) : (
