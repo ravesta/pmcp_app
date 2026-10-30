@@ -192,6 +192,18 @@ describe('checkProjectInfo', () => {
     expect(checkProjectInfo({ name: 'A', description: 'x'.repeat(1001) })).toEqual({ ok: false, fields: { description: 'TOO_LONG' } });
   });
 
+  it('UAT Sign Off dan Go Live opsional; tanggal tidak valid ditolak per isian', () => {
+    expect(checkProjectInfo({ name: 'A' })).toMatchObject({ ok: true, info: { uatSignOffDate: null, goLiveDate: null } });
+    expect(checkProjectInfo({ name: 'A', uatSignOffDate: '2026-11-05', goLiveDate: '2026-11-20' })).toMatchObject({
+      ok: true,
+      info: { uatSignOffDate: '2026-11-05', goLiveDate: '2026-11-20' },
+    });
+    expect(checkProjectInfo({ name: 'A', uatSignOffDate: '2026-02-30', goLiveDate: 'besok' })).toEqual({
+      ok: false,
+      fields: { uatSignOffDate: 'INVALID', goLiveDate: 'INVALID' },
+    });
+  });
+
   it('aplikasi terdampak diduplikasi dibersihkan', () => {
     const result = checkProjectInfo({ name: 'A', applicationIds: [1, 2, 2] });
     expect(result.ok && result.info.applicationIds).toEqual([1, 2]);

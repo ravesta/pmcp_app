@@ -123,6 +123,8 @@ export default async function ProjectDetailPage({
           <Info label="Business owner">{project.businessOwner ?? '-'}</Info>
           <Info label="Department">{project.department ?? '-'}</Info>
           <Info label="Request date">{formatDateOrDash(project.requestDate)}</Info>
+          <Info label="UAT Sign Off">{formatDateOrDash(project.uatSignOffDate)}</Info>
+          <Info label="Go Live">{formatDateOrDash(project.goLiveDate)}</Info>
           <Info label="Aplikasi terdampak">
             {project.applications.length > 0 ? project.applications.map((a) => <span key={a.id} className={styles.tag}>{a.isActive ? a.name : `${a.name} (nonaktif)`}</span>) : '-'}
           </Info>

@@ -35,6 +35,8 @@ function readProjectInfo(formData: FormData): ProjectInfoInput {
     businessOwner: formText(formData, 'businessOwner'),
     department: formText(formData, 'department'),
     requestDate: formText(formData, 'requestDate'),
+    uatSignOffDate: formText(formData, 'uatSignOffDate'),
+    goLiveDate: formText(formData, 'goLiveDate'),
     description: formText(formData, 'description'),
     applicationIds: formIntegers(formData, 'applicationIds'),
   };

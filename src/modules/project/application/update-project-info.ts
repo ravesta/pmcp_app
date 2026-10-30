@@ -46,6 +46,8 @@ function diffInfo(before: ProjectSnapshot, after: ProjectInfo, oldApplications: 
   push('Business owner', text(before.businessOwner), text(after.businessOwner));
   push('Department', text(before.department), text(after.department));
   push('Request date', before.requestDate ? formatDisplayDate(before.requestDate) : '', after.requestDate ? formatDisplayDate(after.requestDate) : '');
+  push('UAT Sign Off', before.uatSignOffDate ? formatDisplayDate(before.uatSignOffDate) : '', after.uatSignOffDate ? formatDisplayDate(after.uatSignOffDate) : '');
+  push('Go Live', before.goLiveDate ? formatDisplayDate(before.goLiveDate) : '', after.goLiveDate ? formatDisplayDate(after.goLiveDate) : '');
   push('Deskripsi', text(before.description), text(after.description));
   push('Aplikasi terdampak', oldApplications, newApplications);
   return changes;

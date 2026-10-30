@@ -186,6 +186,8 @@ model project {
   business_owner      String?               @db.VarChar(100)
   department          String?               @db.VarChar(100)
   request_date        DateTime?             @db.Date
+  uat_sign_off_date   DateTime?             @db.Date
+  go_live_date        DateTime?             @db.Date
   description         String?               @db.VarChar(1000)
   status              project_status_t      @default(BACKLOG)
   status_reason       String?               @db.VarChar(200)

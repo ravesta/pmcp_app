@@ -242,6 +242,8 @@ export async function startProjectFromCard(deps: ProjectDeps, tx: TxContext, act
       businessOwner: project.businessOwner,
       department: project.department,
       requestDate: project.requestDate,
+      uatSignOffDate: project.uatSignOffDate,
+      goLiveDate: project.goLiveDate,
       description: project.description,
       applicationIds: project.applications.map((a) => a.id),
     },

@@ -58,6 +58,8 @@ export function EditInfoButton({ project, activeApplications }: EditInfoButtonPr
                 businessOwner: project.businessOwner,
                 department: project.department,
                 requestDate: project.requestDate,
+                uatSignOffDate: project.uatSignOffDate,
+                goLiveDate: project.goLiveDate,
                 description: project.description,
                 status: project.status,
                 statusReason: project.statusReason,

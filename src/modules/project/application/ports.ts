@@ -67,6 +67,8 @@ export interface ProjectSnapshot {
   readonly businessOwner: string | null;
   readonly department: string | null;
   readonly requestDate: IsoDate | null;
+  readonly uatSignOffDate: IsoDate | null;
+  readonly goLiveDate: IsoDate | null;
   readonly description: string | null;
   readonly status: ProjectStatus;
   readonly statusReason: string | null;

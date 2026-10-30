@@ -17,6 +17,8 @@ export interface ProjectInfoDefaults {
   readonly businessOwner?: string | null;
   readonly department?: string | null;
   readonly requestDate?: string | null;
+  readonly uatSignOffDate?: string | null;
+  readonly goLiveDate?: string | null;
   readonly description?: string | null;
   readonly status?: string;
   readonly statusReason?: string | null;
@@ -56,6 +58,8 @@ export function ProjectInfoFields({ defaults = {}, applications, statusChoices, 
       <PlainInput id="info-owner" name="businessOwner" label="Business owner" type="text" defaultValue={defaults.businessOwner ?? ''} maxLength={100} error={fieldErrors.businessOwner} />
       <PlainInput id="info-dept" name="department" label="Department" type="text" defaultValue={defaults.department ?? ''} maxLength={100} error={fieldErrors.department} />
       <PlainDateField id="info-request" name="requestDate" label="Request date" defaultValue={defaults.requestDate} error={fieldErrors.requestDate} />
+      <PlainDateField id="info-uat" name="uatSignOffDate" label="UAT Sign Off" defaultValue={defaults.uatSignOffDate} error={fieldErrors.uatSignOffDate} />
+      <PlainDateField id="info-golive" name="goLiveDate" label="Go Live" defaultValue={defaults.goLiveDate} error={fieldErrors.goLiveDate} />
       <PlainSelect id="info-status" name="status" label="Status project" emptyLabel={null} defaultValue={defaults.status ?? 'BACKLOG'} onValueChange={setStatus} options={statusChoices.map((value) => ({ value, label: PROJECT_STATUS_TEXT[value as keyof typeof PROJECT_STATUS_TEXT] }))} error={fieldErrors.status} />
       {needsReason ? (
         <div className={grid ? styles.span3 : undefined}><PlainInput id="info-reason" name="statusReason" label="Alasan" type="text" required defaultValue={defaults.statusReason ?? ''} maxLength={200} placeholder="Wajib untuk status Ditunda atau Batal" error={fieldErrors.statusReason} /></div>

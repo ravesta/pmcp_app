@@ -29,6 +29,8 @@ export interface ProjectInfoInput {
   readonly businessOwner?: string;
   readonly department?: string;
   readonly requestDate?: string;
+  readonly uatSignOffDate?: string;
+  readonly goLiveDate?: string;
   readonly description?: string;
   readonly applicationIds?: ReadonlyArray<number>;
 }
@@ -41,6 +43,8 @@ export interface ProjectInfo {
   readonly businessOwner: string | null;
   readonly department: string | null;
   readonly requestDate: IsoDate | null;
+  readonly uatSignOffDate: IsoDate | null;
+  readonly goLiveDate: IsoDate | null;
   readonly description: string | null;
   readonly applicationIds: ReadonlyArray<number>;
 }
@@ -62,8 +66,8 @@ function cleanOptional(value: string | undefined): string | null {
 /**
  * Memeriksa dan membersihkan atribut project.
  * Masukan: atribut mentah. Keluaran: atribut bersih, atau masalah per isian (`name`, `referenceNo`,
- * `projectType`, `businessOwner`, `department`, `requestDate`, `description`). Request date diterima dalam
- * bentuk `YYYY-MM-DD` (konversi dari dd/mm/yyyy dilakukan di lapisan UI).
+ * `projectType`, `businessOwner`, `department`, `requestDate`, `uatSignOffDate`, `goLiveDate`, `description`).
+ * Request date, UAT Sign Off, dan Go Live (semua opsional) diterima dalam bentuk `YYYY-MM-DD` (konversi dari dd/mm/yyyy dilakukan di lapisan UI).
  * Efek samping: tidak ada (fungsi murni).
  * Rujukan: FR-02-01 butir 3, EC-02-01.01, EC-02-01.02, EC-02-01.09.
  */
@@ -91,6 +95,10 @@ export function checkProjectInfo(
 
   const requestDate = cleanOptional(input.requestDate);
   if (requestDate !== null && !isIsoDate(requestDate)) fields.requestDate = 'INVALID';
+  const uatSignOffDate = cleanOptional(input.uatSignOffDate);
+  if (uatSignOffDate !== null && !isIsoDate(uatSignOffDate)) fields.uatSignOffDate = 'INVALID';
+  const goLiveDate = cleanOptional(input.goLiveDate);
+  if (goLiveDate !== null && !isIsoDate(goLiveDate)) fields.goLiveDate = 'INVALID';
 
   if (Object.keys(fields).length > 0) return { ok: false, fields };
   return {
@@ -102,6 +110,8 @@ export function checkProjectInfo(
       businessOwner: cleanOptional(input.businessOwner),
       department: cleanOptional(input.department),
       requestDate: requestDate as IsoDate | null,
+      uatSignOffDate: uatSignOffDate as IsoDate | null,
+      goLiveDate: goLiveDate as IsoDate | null,
       description: cleanOptional(input.description),
       applicationIds: [...new Set(input.applicationIds ?? [])],
     },

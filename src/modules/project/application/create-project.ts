@@ -66,7 +66,7 @@ export function projectInfoMessages(issues: Record<string, string | undefined>):
     if (field === 'name' && issue === 'REQUIRED') messages[field] = MESSAGES.PROJECT_NAME_REQUIRED;
     else if (issue === 'TOO_LONG' && labels[field]) messages[field] = maxLengthMessage(labels[field][0], labels[field][1]);
     else if (field === 'projectType') messages[field] = MESSAGES.PROJECT_TYPE_INVALID;
-    else if (field === 'requestDate') messages[field] = MESSAGES.DATE_INVALID;
+    else if (field === 'requestDate' || field === 'uatSignOffDate' || field === 'goLiveDate') messages[field] = MESSAGES.DATE_INVALID;
     else messages[field] = MESSAGES.UNEXPECTED;
   }
   return messages;
